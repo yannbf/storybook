@@ -45,7 +45,7 @@
     "react-popper-tooltip": "^2.8.3",
     "react-syntax-highlighter": "^11.0.2",
     "react-textarea-autosize": "^7.1.0",
-    "simplebar-react": "^1.0.0-alpha.6",
+    "simplebar-react": "^2.1.0",
     "ts-dedent": "^1.1.1"
   },
   "devDependencies": {
