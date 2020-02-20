@@ -50,7 +50,7 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.14.149",
-    "@types/semver": "^6.0.0"
+    "@types/semver": "^7.1.0"
   },
   "peerDependencies": {
     "react-dom": "*"
