@@ -1,79 +1,175 @@
-# AGENTS.md
+# AGENTS.md — Storybook Agent Guide
 
-Agent operating guide for the Storybook monorepo.
+## 1. How to navigate and work within the codebase
 
-## 1) Navigate and work efficiently
+Read `.github/copilot-instructions.md` first. It is the authoritative reference for:
 
-Start by reading `.github/copilot-instructions.md` for repository-specific commands, structure, sandbox workflows, and constraints.
+- repository structure and key directories
+- system requirements (Node.js version, package manager)
+- compile, lint, type-check, and test commands
+- sandbox generation and E2E task commands
+- NX task runner usage and equivalents
+- important warnings (long-running commands, sandbox location, NX flags)
 
-Use it as the source of truth for:
-- repository layout
-- compile/lint/check/test commands
-- NX vs task command usage
-- sandbox generation/testing patterns
-- command pitfalls and long-running command cautions
+Do not skip it. It contains the commands and context you need to work efficiently.
 
-## 2) Validation + evidence rules (mandatory)
+---
 
-A PR is valid only when verification evidence matches changed areas.
+## 2. How to validate your work and share evidence
 
-### Universal flow (always)
+Your PR is only valid if verification evidence matches the changed area.
+
+### Flow 0 — Universal (always required)
 
 After implementing a fix:
-1. Run relevant tests and wait for completion.
-2. Fix failures before moving on.
-3. Re-read the original issue.
-4. Confirm root cause is addressed (not only symptoms).
-5. Only open/update PR when evidence is complete.
 
-Minimum evidence:
-- test commands run
-- pass/fail summary
+1. Run relevant unit tests and wait for completion.
+2. If tests fail, fix before continuing.
+3. Re-read the original issue/problem statement.
+4. Verify the fix addresses root cause (not just symptoms).
+5. Only proceed to PR when tests pass and solution is aligned with the issue.
 
-### Scenario flows by changed files
+**Minimum PR evidence:** test command(s) and pass result summary.
 
-Run all that apply:
-- `code/renderers/**` → Renderer/browser validation
-- `code/builders/**` affecting browser output → Builder/browser validation
-- `code/builders/**` affecting terminal output → terminal snapshot/diff validation
-- `code/core/src/manager/**` or `code/core/src/builder-manager/**` → Manager UI + E2E validation
+---
 
-### Flow-specific evidence
+### Scenario flows — run all that match your changed files
 
-- **Renderer / Builder browser flows**
-  - create/update repro story
-  - validate in matching sandbox
-  - attach screenshot proving fix
-  - include sandbox template + story path in PR
+| Changed path | Run |
+|---|---|
+| `code/renderers/**` | Flow 1 |
+| `code/builders/**` + browser output affected | Flow 2 |
+| `code/builders/**` + terminal output affected | Flow 3 |
+| `code/core/src/manager/**` or `code/core/src/builder-manager/**` | Flow 4 |
 
-- **Builder terminal-output flow**
-  - use `scripts/capture-terminal-output.ts`
-  - compare against baseline snapshot
-  - attach intended diff excerpt
+---
 
-- **Manager flow**
-  - add/update `code/e2e-tests/` test
-  - run E2E and include passing result
-  - attach screenshot of corrected manager UI
+### Flow 1 — Renderer verification
 
-## 3) PR template compliance (mandatory)
+1. Create/update a template story reproducing the bug.
+2. Select matching sandbox template:
+   - React → `react-vite/default-ts`
+   - Vue3 → `vue3-vite/default-ts`
+   - Svelte → `svelte-vite/default-ts`
+   - (best-fit for other renderers)
+3. Generate full sandbox using NX.
+4. Start sandbox Storybook dev server.
+5. Use Browser MCP to open Storybook and navigate to the test story.
+6. Capture screenshot of the fixed behavior.
+7. If not fixed, iterate.
+
+**PR evidence required:**
+- Screenshot of the story rendering correctly in sandbox.
+- Brief note of sandbox template + story path used.
+
+---
+
+### Flow 2 — Builder verification (browser output)
+
+1. Create/update template story demonstrating the behavior.
+2. Generate full sandbox (typically `react-vite/default-ts`, or best-fit).
+3. Start sandbox Storybook dev server.
+4. Use Browser MCP to verify behavior in browser.
+5. Capture screenshot.
+6. Iterate until correct.
+
+**PR evidence required:**
+- Screenshot proving corrected browser output.
+- Note of builder package + scenario validated.
+
+---
+
+### Flow 3 — Builder verification (terminal output)
+
+1. Use `scripts/capture-terminal-output.ts` against the relevant command.
+2. If no baseline exists, capture baseline first.
+3. Implement fix.
+4. Capture output again with same command.
+5. Diff new output against baseline snapshot.
+6. If diff matches intended behavior, update/commit snapshot.
+7. If diff has unexpected changes, iterate.
+
+**PR evidence required:**
+- Diff excerpt showing intended output changes.
+- Snapshot file update (when expected).
+
+---
+
+### Flow 4 — Manager verification
+
+1. Write/update E2E test in `code/e2e-tests/` for affected interaction.
+2. Build Storybook UI locally.
+3. Start Storybook UI dev server.
+4. Use Browser MCP to navigate to impacted Manager area.
+5. Capture screenshot of correct UI state.
+6. Run E2E suite and confirm test passes.
+
+**PR evidence required:**
+- E2E test added/updated and passing result.
+- Screenshot of corrected Manager UI state.
+
+---
+
+## 3. How to fill in the PR template correctly
 
 Use `.github/PULL_REQUEST_TEMPLATE.md` exactly.
-- Do not replace template sections.
-- Manual testing section must always be completed.
-- Include evidence below testing checkboxes.
 
-In PR body, explicitly include AI disclosure:
+- Do **not** replace the template with a custom format.
+- Keep all template sections intact.
+- The **manual instructions section is mandatory** and must be completed.
+
+### PR title format
+
+```
+<area>: <Fix description starting with uppercase>
+```
+
+Examples:
+- `manager: Fix keyboard navigation regression in addons panel`
+- `builder-vite: Fix HMR invalidation when stories import CSS modules`
+
+### "What I did" section
+
+- Start with a concise summary of what changed.
+- Add a collapsible details block with implementation specifics:
+
+```markdown
+<details>
+<summary>Fix details</summary>
+
+...implementation details...
+
+</details>
+```
+
+### "Testing" section
+
+- Fill template checkboxes first.
+- Then add all applicable evidence **below** the checkboxes:
+  - screenshots
+  - terminal diffs
+  - E2E output
+  - links or artifacts
+
+### AI disclosure (required)
+
+Include in the PR body:
+
+```
 - Created by: <agent>
-- Model: <model>
+- Model: <provider/model>
+```
 
-## 4) Pre-PR gate
+---
 
-Before opening/updating PR, ensure:
-- universal validation flow completed
-- applicable scenario flows executed
-- required evidence attached
-- PR template fully and correctly filled
-- AI disclosure included
+## Pre-PR gate (all must be true before opening/updating PR)
 
-Do not open/update PR without the required evidence and template compliance.
+- [ ] Flow 0 complete (tests pass + issue re-validated)
+- [ ] Correct scenario flow(s) run based on changed files
+- [ ] Required evidence attached (screenshot/diff/E2E proof)
+- [ ] Testing section includes evidence below checkboxes
+- [ ] `.github/PULL_REQUEST_TEMPLATE.md` used without override
+- [ ] PR clearly declares agent + model used
+- [ ] Manual instructions section completed
+
+**Do not open a PR without required evidence and template compliance.**
