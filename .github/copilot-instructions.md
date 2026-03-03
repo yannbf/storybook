@@ -1,201 +1,419 @@
 # GitHub Copilot Instructions for Storybook
 
-You are modifying the Storybook monorepo.
+This document provides comprehensive instructions for GitHub Copilot when working on the Storybook repository.
 
-A PR is only valid when verification evidence matches the changed area.
+## Repository Overview
 
-## Repo operations quick reference (keep this practical)
+Storybook is a large monorepo built with TypeScript, React, and various other frameworks. The monorepo root is at the git root (not `code/`), with the main codebase in `code/` and build tooling in `scripts/`.
 
-### Environment
+## System Requirements
 
-- Node: use version from `.nvmrc`
-- Package manager: Yarn 4 (run via `yarn` / `corepack yarn`)
-- Run commands from repo root unless specified
+- **Node.js**: 22.21.1 (see `.nvmrc`)
+- **Package Manager**: Yarn 4.10.3
+- **Operating System**: Linux/macOS (CI environment)
 
-### High-value directories
+## Repository Structure
 
-- `code/` → main product code (core, renderers, builders, addons, frameworks)
-- `scripts/` → build/testing helper scripts
-- `test-storybooks/` → scenario projects
-- `.github/` → CI + templates + contribution automation
+```
+storybook/                        # Yarn monorepo root
+├── .github/                      # GitHub configurations and workflows
+├── .nx/                          # NX workflows and configuration
+├── code/                         # Main codebase
+│   ├── .storybook/               # Configuration for internal UI Storybook
+│   ├── core/                     # Core Storybook package
+│   ├── lib/                      # Core supporting libraries
+│   ├── addons/                   # Core Storybook addons
+│   ├── builders/                 # Builder integrations
+│   ├── renderers/                # Renderer integrations
+│   ├── frameworks/               # Framework integrations
+│   ├── presets/                  # Preset packages for Webpack-based integrations
+│   └── sandbox/                  # Internal build artifacts (ignore)
+├── scripts/                      # Build and development scripts
+├── docs/                         # Documentation
+├── test-storybooks/              # Test repos
+└── ../storybook-sandboxes/       # Generated sandbox environments (outside repo)
+```
 
-### Core commands
+## Essential Commands and Build Times
+
+All commands run from the **repository root** unless otherwise specified.
+
+### Installation & Setup
 
 ```bash
-yarn
-yarn nx run-many -t compile -c production
-yarn lint
+yarn                              # Install all dependencies (~2.5 min)
+```
+
+### Compilation (Two Approaches)
+
+**Using yarn task (custom task runner):**
+
+```bash
+yarn task compile                 # Compile all packages (~3 min)
+```
+
+**Using NX (recommended for better caching):**
+
+```bash
+yarn nx run-many -t compile -c production    # Compile all packages
+yarn nx compile <package-name> -c production # Compile specific package
+```
+
+### Linting
+
+```bash
+yarn lint                         # Run all linting checks (~4 min)
+```
+
+Fix linting on all touched files by running the following command before commiting:
+
+```bash
+yarn --cwd code lint:js:cmd <file> --fix
+```
+
+### Type Checking
+
+```bash
+yarn task check                   # TypeScript type checking
+# OR with NX:
 yarn nx run-many -t check -c production
-cd code && yarn test
 ```
 
-### Sandbox/testing commands
+### Development Server
 
 ```bash
-yarn task sandbox --template react-vite/default-ts --start-from auto
-yarn task e2e-tests-dev --template react-vite/default-ts --start-from auto
-yarn task test-runner-dev --template react-vite/default-ts --start-from auto
+# Start Storybook UI development server
+cd code && yarn storybook:ui      # Serves on http://localhost:6006/
+# Requires compilation first!
+
+# Build Storybook UI for production
+cd code && yarn storybook:ui:build  # Output: code/storybook-static/
 ```
 
-### Important warnings
+### Testing
 
-- Do not run indefinite dev commands without purpose (`yarn task dev`, `yarn start`).
-- Sandboxes are generated outside repo by default: `../storybook-sandboxes/`.
-- Use `-c production` for NX sandbox-related commands.
+```bash
+cd code && yarn test              # Run all tests
+cd code && yarn test:watch        # Watch mode
+cd code && yarn storybook:vitest  # Storybook UI specific tests
 
-## Universal flow (always required)
+# Task-based testing (with template sandboxes)
+yarn task e2e-tests-dev --template react-vite/default-ts --start-from auto
+yarn task e2e-tests-build --template react-vite/default-ts --start-from auto
+yarn task test-runner-dev --template react-vite/default-ts --start-from auto
+yarn task test-runner-build --template react-vite/default-ts --start-from auto
+```
 
-After implementing a fix:
+## NX Task Runner (Recommended)
 
-1. Run relevant automated tests and wait for completion.
-2. If tests fail, fix the issue before proceeding.
-3. Re-read the original issue/problem statement.
-4. Confirm the fix addresses root cause (not only symptoms).
-5. Only create/update PR when validation is complete and evidence is ready.
+The repository uses NX for task orchestration with better caching and dependency management. NX correctly invalidates compile/check steps when `scripts/` changes.
 
-Minimum PR evidence:
+### yarn task vs NX equivalents
 
-- Test command(s) run
-- Pass/fail summary (must be passing for affected checks)
+```bash
+# Compilation
+yarn task compile --no-link
+yarn nx run-many -t compile -c production
 
-## Scenario flows by changed area
+# E2E tests on specific template
+yarn task e2e-tests-dev --template react-vite/default-ts --start-from auto --no-link
+yarn nx e2e-tests-dev react-vite/default-ts -c production
 
-In addition to the universal flow, run matching scenario flows based on files changed:
+# Skip task dependencies (start from a specific step)
+yarn task e2e-tests-dev --start-from e2e-tests --template react-vite/default-ts --no-link
+yarn nx e2e-tests-dev -c production --exclude-task-dependencies
+```
 
-- `code/renderers/**` → **Flow 1 (Renderer/browser behavior)**
-- `code/builders/**` with browser output impact → **Flow 2 (Builder/browser behavior)**
-- `code/builders/**` with terminal output impact → **Flow 3 (Builder/terminal output)**
-- `code/core/src/manager/**` or `code/core/src/builder-manager/**` → **Flow 4 (Manager UI)**
+### Key NX Concepts
 
-If multiple conditions apply, run all matching flows.
+- `-c production` flag is **required** for sandbox-related commands
+- `react-vite/default-ts` is the default project (can omit in NX commands)
+- NX automatically handles task dependencies via `nx.json` configuration
+- Uses NX Cloud for distributed caching in CI
 
----
+## Important Warnings and Limitations
 
-## Flow 1 — Renderer/browser behavior
+### Commands to Avoid
 
-Applies to renderer package changes (React, Vue3, Svelte, HTML, Preact, Web Components, Server).
+- **DO NOT RUN**: `yarn task dev` - This starts a permanent development server that runs indefinitely
+- **DO NOT RUN**: `yarn start` - Also starts a long-running development server
 
-Steps:
+### Sandbox Location Change
 
-1. Create/update a template story reproducing the issue.
-2. Select matching sandbox template (best fit for changed renderer):
-   - React → `react-vite/default-ts`
-   - Vue3 → `vue3-vite/default-ts`
-   - Svelte → `svelte-vite/default-ts`
-3. Generate full sandbox using NX.
-4. Start sandbox Storybook dev server.
-5. Use browser automation (or manual browser) to navigate to the test story.
-6. Capture screenshot of fixed behavior.
-7. If not fixed, iterate.
+Sandboxes are now generated **outside** the repository at `../storybook-sandboxes/` by default.
 
-Required PR evidence:
+- Set `STORYBOOK_SANDBOX_ROOT=./sandbox` for local sandbox directory (not recommended)
+- The `./sandbox` directory exists only for NX outputs (not for CI tests)
 
-- Screenshot showing corrected rendering in sandbox
-- Note with sandbox template + story path used
+### Available Task Commands
 
----
+The repository includes task scripts in `scripts/tasks/`:
 
-## Flow 2 — Builder changes affecting browser output
+- `compile` - TypeScript compilation
+- `check` - Package validation
+- `build` - Package building
+- `sandbox` - Sandbox creation
+- `dev` - Development server (AVOID - runs indefinitely)
+- `e2e-tests-build` / `e2e-tests-dev` - E2E tests
+- `test-runner-build` / `test-runner-dev` - Test runner scenarios
+- `chromatic` - Visual testing with Chromatic
+- `publish` - Package publishing
+- `run-registry` - Local npm registry (verdaccio)
+- `smoke-test` - Basic functionality tests
+- `vitest-test` - Vitest integration tests
 
-Applies to builder changes where impact is rendering/HMR/assets behavior.
+## Recommended Development Workflow
 
-Steps:
+### For Code Changes
 
-1. Create/update template story reproducing behavior.
-2. Generate full sandbox (usually `react-vite/default-ts`, or best-fit template).
-3. Start sandbox Storybook dev server.
-4. Verify corrected behavior in browser.
-5. Capture screenshot.
-6. Iterate until stable.
+1. Install dependencies: `yarn` (if needed)
+2. Compile packages: `yarn nx run-many -t compile -c production`
+3. Make your changes
+4. Recompile changed packages
+5. Test changes with: `cd code && yarn storybook:ui:build`
+6. Run relevant tests: `cd code && yarn test`
 
-Required PR evidence:
+### For Testing UI Changes
 
-- Screenshot proving corrected browser output
-- Note with builder package + validated scenario
+1. Generate a sandbox: `yarn task sandbox --template react-vite/default-ts --start-from auto`
+   - Sandboxes are created at `../storybook-sandboxes/` by default
+2. If sandbox generation fails, use Storybook UI: `cd code && yarn storybook:ui`
+3. Access at http://localhost:6006/
 
----
+### For Addon/Framework/Renderers Development
 
-## Flow 3 — Builder changes affecting terminal output
+1. Navigate to the relevant package in `code/addons/`, `code/frameworks/` or `code/renderers/`
+2. Make changes to source files
+3. Recompile: `yarn nx compile <package-name> -c production`
+4. Generate a sandbox matching the framework/renderer
+5. Test with appropriate test tasks
 
-Applies when the impact is in CLI/build/dev-server stdout/stderr.
+## Bash Command Guidelines
 
-Steps:
+### Timeout Settings
 
-1. Use `scripts/capture-terminal-output.ts` with the relevant command.
-2. If no baseline exists, capture baseline first.
-3. Implement fix.
-4. Capture output again using same command.
-5. Diff against baseline snapshot.
-6. If intended, update/commit snapshot.
-7. If unexpected changes exist, iterate.
+- **Short commands** (< 30s): Default timeout (120s) is sufficient
+- **Dependency installation**: Use 300+ seconds timeout
+- **Compilation**: Use 300+ seconds timeout
+- **Linting**: Use 300+ seconds timeout
+- **Development servers**: Use async mode or timeout commands
 
-Required PR evidence:
+### Example Bash Commands
 
-- Diff excerpt showing intended output change
-- Snapshot update committed when expected
+```bash
+# Safe compilation with proper timeout
+bash(command="cd /path/to/storybook && yarn nx run-many -t compile -c production", timeout=300, async=false)
 
----
+# Start development server with timeout to prevent hanging
+bash(command="cd /path/to/storybook/code && timeout 30s yarn storybook:ui", timeout=45, async=false)
 
-## Flow 4 — Manager / builder-manager UI changes
+# Use async for interactive or long-running commands
+bash(command="cd /path/to/storybook/code && yarn storybook:ui", async=true)
+```
 
-Applies to manager-side UI and interactions.
+## Sandbox Environments
 
-Steps:
+### Generating New Sandboxes
 
-1. Add/update E2E test in `code/e2e-tests/` for the affected behavior.
-2. Build Storybook UI locally.
-3. Start Storybook UI dev server.
-4. Navigate to impacted manager area.
-5. Capture screenshot of corrected UI state.
-6. Run E2E suite and ensure pass.
+Sandboxes are test environments that allow you to test Storybook changes with different framework combinations. **Note**: Sandboxes are now generated outside the repo by default at `../storybook-sandboxes/`.
 
-Required PR evidence:
+```bash
+# Generate a new sandbox (run from repository root)
+yarn task sandbox --template react-vite/default-ts --start-from auto
+# Creates: ../storybook-sandboxes/react-vite-default-ts/
 
-- E2E test added/updated + passing output
-- Screenshot of corrected manager UI state
+# Using NX (with -c production flag required)
+yarn nx sandbox react-vite/default-ts -c production
+```
 
----
+### Available Framework/Builder Templates
 
-## PR format requirements (mandatory)
+Common templates include:
 
-Use `.github/PULL_REQUEST_TEMPLATE.md` exactly:
+- `react-vite/default-ts` - React with Vite and TypeScript
+- `react-webpack/default-ts` - React with Webpack and TypeScript
+- `angular-cli/default-ts` - Angular CLI with TypeScript
+- `svelte-vite/default-ts` - Svelte with Vite and TypeScript
+- `vue3-vite/default-ts` - Vue 3 with Vite and TypeScript
+- `nextjs/default-ts` - Next.js with TypeScript
+- And many more...
 
-- Do not replace it with custom PR structure.
-- Keep all template sections intact.
-- Manual testing section is mandatory and must be filled.
+### Working with Generated Sandboxes
 
-In PR body, explicitly declare AI usage:
+Once a sandbox is successfully generated, you can work with it:
 
-- Created by: <agent>
-- Model: <model>
+```bash
+# Navigate to the generated sandbox (now outside the repo)
+cd ../storybook-sandboxes/react-vite-default-ts
 
-## PR writing quality
+# Install dependencies if needed
+yarn install
 
-### Title
+# Start the sandbox Storybook
+yarn storybook
+```
 
-Use scoped, concise titles. Example:
+### Current Limitations
 
-- `manager: fix keyboard navigation regression in addons panel`
-- `builder-vite: fix HMR invalidation when stories import CSS modules`
+- **Sandbox Location**: Sandboxes are generated at `../storybook-sandboxes/` by default, outside the repository
+- **NX Outputs**: The `./sandbox` directory in the repo exists only for NX outputs, not for CI tests
+- **Workaround**: For testing changes when sandbox generation fails, you can work directly with the Storybook UI instead
 
-### "What I did"
+### Testing Changes Without Sandboxes
 
-- Start with concise summary.
-- Then add a collapsible details section for implementation specifics.
+When sandbox generation is not available:
 
-### "Testing"
+1. Make your changes to the relevant packages in `code/`
+2. Compile: `yarn nx run-many -t compile -c production`
+3. Test with Storybook UI: `cd code && yarn storybook:ui`
+4. Access at http://localhost:6006/ to test your changes
 
-- Complete template checkboxes first.
-- Then include all applicable evidence below (screenshots, terminal diffs, E2E output, links/artifacts).
+## Package Management
 
-## Pre-PR gate (must pass)
+### Adding Dependencies
 
-- Universal flow complete (tests pass + issue re-validated)
-- Correct scenario flow(s) executed for changed files
-- Required evidence attached (screenshot/diff/E2E proof)
-- Testing section contains evidence below checkboxes
-- `.github/PULL_REQUEST_TEMPLATE.md` used without override
-- PR clearly declares agent + model
-- Manual testing section completed
+```bash
+# Add to specific workspace
+cd code/frameworks/react-vite && yarn add <package>
 
-Do not open a PR without required evidence and template compliance.
+# Add to root workspace
+yarn add <package> -W
+```
+
+### Building Specific Packages
+
+```bash
+# Build specific package (run from code/ directory)
+cd code && yarn build <package-name>
+```
+
+## Testing Strategy
+
+### Unit Tests
+
+```bash
+cd code && yarn test
+# Run specific test suites as needed
+```
+
+### Visual Testing
+
+- Use Storybook UI for visual regression testing
+- Chromatic integration available for visual reviews
+
+### End-to-End Testing
+
+- Playwright tests available (version 1.52.0 configured)
+- E2E test tasks: `yarn task e2e-tests-build --start-from auto` or `yarn task e2e-tests-dev --start-from auto`
+- Test runner scenarios: `yarn task test-runner-build --start-from auto` or `yarn task test-runner-dev --start-from auto`
+- Smoke tests: `yarn task smoke-test --start-from auto`
+
+### Watch Mode Commands
+
+```bash
+# Watch mode for unit tests
+cd code && yarn test:watch
+
+# Watch mode for affected tests only
+yarn affected:test
+
+# Storybook UI vitest watch mode
+cd code && yarn storybook:vitest
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Build Failures**: Often resolved by running `yarn` followed by `yarn nx run-many -t compile -c production`
+2. **Port Conflicts**: Storybook UI uses port 6006 by default
+3. **Memory Issues**: Large compilation tasks may require increased Node.js memory limits
+4. **Sandbox Directory Confusion**: Sandboxes are at `../storybook-sandboxes/`, not `./sandbox` or `code/sandbox/`
+
+### Debug Information
+
+- Storybook logs available in generated sandbox directories
+- Use `--debug` flag with CLI commands for verbose output
+- Check `.cache/` directories for build artifacts
+
+## Performance Tips
+
+1. **Incremental Builds**: Use compilation cache when possible
+2. **Selective Building**: Build only changed packages during development
+3. **Memory Management**: Monitor memory usage during large operations
+4. **Parallel Processing**: Yarn commands use parallel processing by default
+
+## Contributing Guidelines
+
+### Code Style
+
+- ESLint and Prettier configurations are enforced
+- TypeScript strict mode is enabled
+- Follow existing patterns in the codebase
+
+### Code Quality Checks
+
+After making file changes, always run both formatting and linting checks:
+
+1. **Prettier**: Format code with `yarn prettier --write <file>`
+2. **ESLint**: Check for linting issues with `yarn lint:js:cmd <file>`
+   - The full eslint command is: `cross-env NODE_ENV=production eslint --cache --cache-location=../.cache/eslint --ext .js,.jsx,.json,.html,.ts,.tsx,.mjs --report-unused-disable-directives`
+   - Use the `lint:js:cmd` script for convenience
+   - Fix any errors or warnings before committing
+
+### Testing Guidelines
+
+When writing unit tests:
+
+1. **Export functions for testing**: If functions need to be tested, export them from the module
+2. **Write meaningful tests**: Tests should actually import and call the functions being tested, not just verify syntax patterns
+3. **Use coverage reports**: Run tests with coverage to identify untested code
+   - Run coverage: `yarn vitest run --coverage <test-file>`
+   - Aim for high coverage of business logic (75%+ for statements/lines)
+   - Use coverage reports to identify missing test cases
+   - Focus on covering:
+     - All branches and conditions
+     - Edge cases and error paths
+     - Different input variations
+4. **Mock external dependencies**: Use `vi.mock()` to mock file system, loggers, and other external dependencies
+5. **Run tests before committing**: Ensure all tests pass with `yarn test` or `yarn vitest run`
+
+### Logging
+
+When adding logging to code, always use the appropriate logger:
+
+- **Server-side code** (Node.js): Use `logger` from `storybook/internal/node-logger`
+
+  ```typescript
+  import { logger } from 'storybook/internal/node-logger';
+  
+  logger.info('Server message');
+  logger.warn('Warning message');
+  logger.error('Error message');
+  ```
+
+- **Client-side code** (browser): Use `logger` from `storybook/internal/client-logger`
+
+  ```typescript
+  import { logger } from 'storybook/internal/client-logger';
+  
+  logger.info('Client message');
+  logger.warn('Warning message');
+  logger.error('Error message');
+  ```
+
+- **DO NOT** use `console.log`, `console.warn`, or `console.error` directly unless in isolated files where importing loggers would significantly increase bundle size
+
+### Git Workflow
+
+- Work on feature branches
+- Ensure all builds and tests pass before submitting PRs
+- Include relevant documentation updates
+
+### Documentation
+
+- Update relevant README files for significant changes
+- Include code examples in addon/framework documentation
+- Update migration guides for breaking changes
+
+This document should be updated as the repository evolves and new build requirements or limitations are discovered.
