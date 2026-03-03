@@ -197,6 +197,59 @@
       color: currentColor;
     }
 
+    & .sb-errordisplay_docs {
+      font-family: Nunito Sans;
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 19px;
+      color: #1ea7fd;
+      text-decoration: none;
+      margin: 0;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    & .sb-errordisplay_code-wrapper {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    & .sb-errordisplay_code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 10px;
+      background: #1b1b1b;
+      color: #999;
+      border-radius: 4px 4px 0 0;
+      font-size: 12px;
+      font-family: Nunito Sans;
+
+      & span {
+        background: #1b1b1b;
+        color: #999;
+      }
+    }
+
+    & .sb-errordisplay_copy {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #c6c6c6;
+      border-radius: 3px;
+      padding: 2px 8px;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: Nunito Sans;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+      }
+    }
+
     & .sb-errordisplay_code {
       padding: 10px;
       flex: 1;
@@ -207,7 +260,7 @@
       font-size: 14px;
       font-weight: 400;
       line-height: 19px;
-      border-radius: 4px;
+      border-radius: 0 0 4px 4px;
 
       font-family:
         'Operator Mono', 'Fira Code Retina', 'Fira Code', 'FiraCode-Retina', 'Andale Mono',

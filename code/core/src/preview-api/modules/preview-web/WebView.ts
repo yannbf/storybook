@@ -7,6 +7,12 @@ import AnsiToHtml from 'ansi-to-html';
 import { parse } from 'picoquery';
 import { dedent } from 'ts-dedent';
 
+import {
+  categorizeError,
+  getCategoryDescription,
+  getCategoryDocUrl,
+  getCategorySuggestions,
+} from '../../../shared/utils/categorize-render-errors';
 import type { View } from './View';
 
 const { document } = global;
@@ -134,7 +140,8 @@ export class WebView implements View<HTMLElement> {
     });
   }
 
-  showErrorDisplay({ message = '', stack = '' }) {
+  showErrorDisplay(err: { message?: string; stack?: string }) {
+    const { message = '', stack = '' } = err;
     let header = message;
     let detail = stack;
     const parts = message.split('\n');
@@ -145,6 +152,83 @@ export class WebView implements View<HTMLElement> {
 
     document.getElementById('error-message')!.innerHTML = ansiConverter.toHtml(header);
     document.getElementById('error-stack')!.innerHTML = ansiConverter.toHtml(detail);
+
+    // Categorize the error and show actionable guidance
+    const { category } = categorizeError(message, stack);
+    const description = getCategoryDescription(category);
+    const suggestions = getCategorySuggestions(category);
+
+    const descEl = document.getElementById('error-category-description');
+    if (descEl) {
+      descEl.textContent = description;
+    }
+
+    const suggestionsEl = document.getElementById('error-suggestions');
+    if (suggestionsEl) {
+      suggestionsEl.innerHTML = suggestions.map((s) => `<li>${s}</li>`).join('');
+    }
+
+    // Determine documentation URL: prefer StorybookError's documentation, fall back to category URL
+    const docsEl = document.getElementById('error-docs-link') as HTMLAnchorElement | null;
+    if (docsEl) {
+      let docUrl: string | null = null;
+
+      // Check if the error is a StorybookError with documentation
+      if ('documentation' in err) {
+        const { documentation } = err as { documentation: boolean | string | string[] };
+        if (typeof documentation === 'string') {
+          docUrl = documentation;
+        } else if (Array.isArray(documentation) && documentation.length > 0) {
+          docUrl = documentation[0];
+        } else if (documentation === true && 'fullErrorCode' in err) {
+          docUrl = `https://storybook.js.org/error/${(err as { fullErrorCode: string }).fullErrorCode}?ref=error`;
+        }
+      }
+
+      // Fall back to category-specific doc URL
+      if (!docUrl) {
+        docUrl = getCategoryDocUrl(category);
+      }
+
+      if (docUrl) {
+        docsEl.href = docUrl;
+        docsEl.removeAttribute('hidden');
+      } else {
+        docsEl.setAttribute('hidden', '');
+      }
+    }
+
+    // Set up copy button
+    const copyButton = document.getElementById('error-copy-button');
+    if (copyButton) {
+      copyButton.onclick = () => {
+        const textToCopy = `${message}\n${stack}`.trim();
+        const reset = () => {
+          setTimeout(() => {
+            copyButton.textContent = 'Copy';
+          }, 1500);
+        };
+
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(textToCopy).then(() => {
+            copyButton.textContent = 'Copied!';
+            reset();
+          });
+        } else {
+          // Fallback for older browsers
+          const textArea = document.createElement('textarea');
+          textArea.value = textToCopy;
+          textArea.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textArea);
+          copyButton.textContent = 'Copied!';
+          reset();
+        }
+      };
+    }
 
     this.showMode(Mode.ERROR);
   }

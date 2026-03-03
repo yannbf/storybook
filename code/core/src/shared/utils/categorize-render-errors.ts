@@ -231,6 +231,112 @@ function getMatchedDependencies(category: ErrorCategory, ctx: ErrorContext): str
   }
 }
 
+/** For a given category, return actionable suggestions to help resolve the issue. */
+export function getCategorySuggestions(category: ErrorCategory): string[] {
+  switch (category) {
+    case ERROR_CATEGORIES.MISSING_STATE_PROVIDER:
+      return [
+        'Wrap your component with the required state management provider using a Storybook decorator.',
+        'See the Decorators documentation: https://storybook.js.org/docs/writing-stories/decorators',
+      ];
+
+    case ERROR_CATEGORIES.MISSING_ROUTER_PROVIDER:
+      return [
+        'Wrap your component with a router provider using a Storybook decorator.',
+        'See the Decorators documentation: https://storybook.js.org/docs/writing-stories/decorators',
+      ];
+
+    case ERROR_CATEGORIES.MISSING_THEME_PROVIDER:
+      return [
+        'Wrap your component with a theme provider using a Storybook decorator.',
+        'See the Decorators documentation: https://storybook.js.org/docs/writing-stories/decorators',
+      ];
+
+    case ERROR_CATEGORIES.MISSING_TRANSLATION_PROVIDER:
+      return [
+        'Wrap your component with an i18n/translation provider using a Storybook decorator.',
+        'See the Decorators documentation: https://storybook.js.org/docs/writing-stories/decorators',
+      ];
+
+    case ERROR_CATEGORIES.MISSING_PROVIDER:
+      return [
+        'Use a decorator to supply the required context or provider for your component.',
+        'See the Decorators documentation: https://storybook.js.org/docs/writing-stories/decorators',
+      ];
+
+    case ERROR_CATEGORIES.MISSING_PORTAL_ROOT:
+      return [
+        'Add the required portal container element using a decorator or in .storybook/preview.js.',
+        'See the Decorators documentation: https://storybook.js.org/docs/writing-stories/decorators',
+      ];
+
+    case ERROR_CATEGORIES.HOOK_USAGE_ERROR:
+      return [
+        'Ensure hooks are only called inside React function components or custom hooks.',
+        'Make sure all packages use the same version of React.',
+        'See the React hooks rules: https://react.dev/warnings/invalid-hook-call-warning',
+      ];
+
+    case ERROR_CATEGORIES.MODULE_IMPORT_ERROR:
+      return [
+        'Verify the module is installed and listed in your package.json.',
+        'Check your webpack or vite configuration for missing loaders or aliases.',
+      ];
+
+    case ERROR_CATEGORIES.DYNAMIC_MODULE_IMPORT_ERROR:
+      return [
+        'A dynamically imported module could not be loaded. Check your build configuration.',
+        'Verify the module exists and can be resolved at runtime.',
+      ];
+
+    case ERROR_CATEGORIES.TEST_FILE_IMPORT_ERROR:
+      return [
+        'Check your Vitest setup configuration for the failing test file.',
+        'Verify the test file path is correct and the file can be imported.',
+      ];
+
+    case ERROR_CATEGORIES.COMPONENT_RENDER_ERROR:
+      return [
+        'Check the component for undefined property access or invalid prop types.',
+        'Review the error stack trace below to identify the source of the error.',
+      ];
+
+    case ERROR_CATEGORIES.SERVER_COMPONENTS_ERROR:
+      return [
+        "Add the 'use client' directive to the top of your component file.",
+        'Server components cannot be rendered directly in Storybook.',
+      ];
+
+    default:
+      return [
+        'Check the browser console and the terminal you ran Storybook from for more details.',
+        'Try reloading the page or clearing browser storage if the issue persists.',
+      ];
+  }
+}
+
+/** For a given category, return a relevant documentation URL, or null if none is available. */
+export function getCategoryDocUrl(category: ErrorCategory): string | null {
+  switch (category) {
+    case ERROR_CATEGORIES.MISSING_PROVIDER:
+    case ERROR_CATEGORIES.MISSING_STATE_PROVIDER:
+    case ERROR_CATEGORIES.MISSING_ROUTER_PROVIDER:
+    case ERROR_CATEGORIES.MISSING_THEME_PROVIDER:
+    case ERROR_CATEGORIES.MISSING_TRANSLATION_PROVIDER:
+    case ERROR_CATEGORIES.MISSING_PORTAL_ROOT:
+      return 'https://storybook.js.org/docs/writing-stories/decorators?ref=error';
+
+    case ERROR_CATEGORIES.MODULE_IMPORT_ERROR:
+      return 'https://storybook.js.org/docs/builders/webpack?ref=error';
+
+    case ERROR_CATEGORIES.HOOK_USAGE_ERROR:
+      return 'https://react.dev/warnings/invalid-hook-call-warning';
+
+    default:
+      return null;
+  }
+}
+
 /** For a given category, return a description of the error for better legibility. */
 export function getCategoryDescription(category: ErrorCategory): string {
   switch (category) {
