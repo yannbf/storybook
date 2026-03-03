@@ -121,16 +121,16 @@ Use `.github/PULL_REQUEST_TEMPLATE.md` exactly.
 ### PR title format
 
 ```
-<area>: <Fix description starting with uppercase>
+<Area>: <Fix description>
 ```
 
 Examples:
-- `manager: Fix keyboard navigation regression in addons panel`
-- `builder-vite: Fix HMR invalidation when stories import CSS modules`
+- `Manager: Fix keyboard navigation regression in addons panel`
+- `Builder-Vite: Fix HMR invalidation when stories import CSS modules`
 
 ### "What I did" section
 
-- Start with a concise summary of what changed.
+- Start with an introduction saying the fix was built by AI. Then add a concise summary of what changed, giving enough change of how the issue is fixed.
 - Add a collapsible details block with implementation specifics:
 
 ```markdown
