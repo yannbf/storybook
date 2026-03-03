@@ -4,6 +4,45 @@ You are modifying the Storybook monorepo.
 
 A PR is only valid when verification evidence matches the changed area.
 
+## Repo operations quick reference (keep this practical)
+
+### Environment
+
+- Node: use version from `.nvmrc`
+- Package manager: Yarn 4 (run via `yarn` / `corepack yarn`)
+- Run commands from repo root unless specified
+
+### High-value directories
+
+- `code/` → main product code (core, renderers, builders, addons, frameworks)
+- `scripts/` → build/testing helper scripts
+- `test-storybooks/` → scenario projects
+- `.github/` → CI + templates + contribution automation
+
+### Core commands
+
+```bash
+yarn
+yarn nx run-many -t compile -c production
+yarn lint
+yarn nx run-many -t check -c production
+cd code && yarn test
+```
+
+### Sandbox/testing commands
+
+```bash
+yarn task sandbox --template react-vite/default-ts --start-from auto
+yarn task e2e-tests-dev --template react-vite/default-ts --start-from auto
+yarn task test-runner-dev --template react-vite/default-ts --start-from auto
+```
+
+### Important warnings
+
+- Do not run indefinite dev commands without purpose (`yarn task dev`, `yarn start`).
+- Sandboxes are generated outside repo by default: `../storybook-sandboxes/`.
+- Use `-c production` for NX sandbox-related commands.
+
 ## Universal flow (always required)
 
 After implementing a fix:
