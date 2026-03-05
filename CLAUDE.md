@@ -116,3 +116,11 @@ The skill files live in `.claude/skills/` and cover the full workflow:
 ## Custom GitHub Copilot Agent
 
 For GitHub.com Copilot coding agent, a specialized custom agent is available at `.github/copilot/agents/storybook-bug-fixer.agent.md`. Assign issues to `@storybook-bug-fixer` and it will read and follow the `.claude/skills/` workflow files end-to-end.
+
+## Automated Triggering via GitHub Agentic Workflows
+
+This repo uses [GitHub Agentic Workflows (gh-aw)](https://github.github.com/gh-aw/) to automatically assign Copilot to issues labeled `agent-fix`.
+
+Workflow file: `.github/agentic-workflows/agent-fix-on-label.md`
+
+The gh-aw workflow is the **trigger layer** only. Execution follows this file (CLAUDE.md) and the skill files in `.claude/skills/`. See `AGENTS.md` for full details.
