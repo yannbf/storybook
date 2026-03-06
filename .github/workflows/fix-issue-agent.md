@@ -89,28 +89,32 @@ The issue number to pass as `$ARGUMENTS[0]` throughout the skill files is: **`${
 - `.github/PULL_REQUEST_TEMPLATE.md` — PR body template (every section is mandatory)
 - `CLAUDE.md` — Repository-wide instructions and commands
 
-## AWF Environment Constraints
-
-This workflow runs inside the GitHub Agentic Workflows (gh-aw) AWF sandbox. **Node modules are NOT pre-installed** in this environment. Key constraints:
-
-- **Do NOT run `yarn install`** — the Storybook monorepo has thousands of dependencies and package installation is blocked in the AWF sandbox (the firewall blocks npm registry HTTPS tunnels). Running `yarn install` will fail and waste the entire time budget.
-- **Do NOT run `yarn nx compile`**, `yarn nx run-many`, or any command that requires `node_modules` — these will fail without packages.
-- **Do NOT run `cd code && yarn test`** — requires packages to be installed.
-- **Rely on CI for verification** — once you create the PR, the existing CI workflows (`copilot-verification.yml`, nx workflows) will run automatically and verify the fix. You do NOT need to run tests locally.
-
-If you need to confirm a file change is syntactically correct, you can inspect the file directly. Do NOT attempt any npm/yarn/node commands.
-
 ## Key Commands
 
 Refer to `CLAUDE.md` for all commands. Key ones:
 
 ```bash
+# Compilation
+yarn nx compile <package-name>
+
+# Type checking
+yarn nx run-many -t check -c production
+
+# Testing
+cd code && yarn test
+
 # Format/lint (only at the end, not in between)
 yarn prettier --write <file>
 yarn --cwd code lint:js:cmd <file> --fix
 ```
 
-**Note**: Compilation and testing commands (`yarn nx compile`, `yarn test`, etc.) require `node_modules` which is NOT available in this environment. Skip those steps and rely on CI.
+## AWF Environment Notes
+
+This workflow runs inside the GitHub Agentic Workflows (gh-aw) AWF sandbox. Node modules **are** pre-installed and the codebase is pre-compiled as part of the workflow setup steps. Key constraints:
+
+- **Do NOT run `yarn install`** — packages are already installed; re-running install is unnecessary and will waste time.
+- **Do NOT run `yarn task dev` or `yarn start`** — these run indefinitely.
+- All compile, test, lint, and format commands work normally.
 
 ## PR Creation in This Context
 ## Screenshots and Visual Verification
@@ -153,16 +157,15 @@ The `create-pull-request` safe-output is pre-configured with:
 - The branch created locally MUST be named `agent/fix-issue-${{ github.event.issue.number }}`
 - You MUST target the `next` branch (configured automatically via safe-output)
 - Do NOT run `yarn task dev` or `yarn start` (runs indefinitely)
-- Do NOT run `yarn install`, `npm install`, or any package installation commands — `node_modules` is not available in this environment and installation will fail
-- Do NOT run `yarn nx compile`, `yarn nx run-many`, `cd code && yarn test`, or any command requiring `node_modules` — rely on CI for verification instead
+- Do NOT run `yarn install` or any package installation commands — packages are already installed
 
 ## Success Criteria
 
 Your job is complete only when ALL of the following are true:
 
 - ✅ Issue understood, fix plan documented, local branch `agent/fix-issue-${{ github.event.issue.number }}` created
-- ✅ Code changes implemented correctly (syntax verified by reading the file, not by running build/test commands)
-- ✅ Verification completed per the flow (0–4) detected in `plan-bug-fix` (skip steps that require `node_modules`; CI will handle compilation and testing)
+- ✅ Code implemented and all tests pass (`cd code && yarn test`)
+- ✅ Verification completed per the flow (0–4) detected in `plan-bug-fix`
 - ✅ Verification checklist passed (root cause confirmed, no regressions)
 - ✅ All changes committed locally with a meaningful commit message
 - ✅ PR title and body output in final message, satisfying `.github/PULL_REQUEST_TEMPLATE.md`

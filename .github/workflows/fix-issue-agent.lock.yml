@@ -314,6 +314,16 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
+      - name: Setup Node.js and Install Dependencies
+        uses: ./.github/actions/setup-node-and-install
+        with:
+          install-code-deps: true
+      - name: Install Playwright browsers
+        run: cd code && yarn playwright install --with-deps chromium
+      - name: Compile
+        run: yarn nx run-many --targets compile
+        env:
+          NX_CLOUD_ACCESS_TOKEN: ${{ vars.COPILOT_NX_CLOUD_ACCESS_TOKEN }}
       - name: Create gh-aw temp directory
         run: bash /opt/gh-aw/actions/create_gh_aw_tmp_dir.sh
       - name: Configure Git credentials
