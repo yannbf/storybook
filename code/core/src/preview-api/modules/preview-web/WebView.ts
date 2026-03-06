@@ -7,6 +7,12 @@ import AnsiToHtml from 'ansi-to-html';
 import { parse } from 'picoquery';
 import { dedent } from 'ts-dedent';
 
+import {
+  ERROR_CATEGORIES,
+  type ErrorCategory,
+  categorizeError,
+  getCategoryDescription,
+} from '../../../shared/utils/categorize-render-errors';
 import type { View } from './View';
 
 const { document } = global;
@@ -38,6 +44,54 @@ type Layout = keyof typeof layoutClassMap | 'none';
 const ansiConverter = new AnsiToHtml({
   escapeXML: true,
 });
+
+function getDocsLink(category: ErrorCategory): string {
+  switch (category) {
+    case ERROR_CATEGORIES.MISSING_PROVIDER:
+    case ERROR_CATEGORIES.MISSING_STATE_PROVIDER:
+    case ERROR_CATEGORIES.MISSING_ROUTER_PROVIDER:
+    case ERROR_CATEGORIES.MISSING_THEME_PROVIDER:
+    case ERROR_CATEGORIES.MISSING_TRANSLATION_PROVIDER:
+    case ERROR_CATEGORIES.MISSING_PORTAL_ROOT:
+      return 'https://storybook.js.org/docs/writing-stories/decorators';
+    case ERROR_CATEGORIES.HOOK_USAGE_ERROR:
+      return 'https://storybook.js.org/docs/writing-stories/build-pages-with-storybook';
+    case ERROR_CATEGORIES.MODULE_IMPORT_ERROR:
+    case ERROR_CATEGORIES.DYNAMIC_MODULE_IMPORT_ERROR:
+      return 'https://storybook.js.org/docs/builders/vite';
+    case ERROR_CATEGORIES.SERVER_COMPONENTS_ERROR:
+      return 'https://storybook.js.org/docs/get-started/frameworks/nextjs';
+    case ERROR_CATEGORIES.TEST_FILE_IMPORT_ERROR:
+      return 'https://storybook.js.org/docs/writing-tests';
+    default:
+      return 'https://storybook.js.org/docs/writing-stories';
+  }
+}
+
+function getCategorySuggestions(category: ErrorCategory): string {
+  switch (category) {
+    case ERROR_CATEGORIES.MISSING_PROVIDER:
+    case ERROR_CATEGORIES.MISSING_STATE_PROVIDER:
+    case ERROR_CATEGORIES.MISSING_ROUTER_PROVIDER:
+    case ERROR_CATEGORIES.MISSING_THEME_PROVIDER:
+    case ERROR_CATEGORIES.MISSING_TRANSLATION_PROVIDER:
+      return '<ol><li>Add a <a href="https://storybook.js.org/docs/writing-stories/decorators">decorator</a> to your story that wraps it in the required provider.</li><li>Alternatively, add the decorator globally in <code>.storybook/preview.ts</code> so all stories have access.</li></ol>';
+    case ERROR_CATEGORIES.MISSING_PORTAL_ROOT:
+      return '<ol><li>Ensure a portal root element (e.g., <code>#portal-root</code>) is present in your story HTML.</li><li>Use a <a href="https://storybook.js.org/docs/writing-stories/decorators">decorator</a> to inject the required container element.</li></ol>';
+    case ERROR_CATEGORIES.HOOK_USAGE_ERROR:
+      return '<ol><li>Ensure hooks are only called at the top level of a React function component.</li><li>Check for conditional or nested hook calls in your component.</li></ol>';
+    case ERROR_CATEGORIES.MODULE_IMPORT_ERROR:
+      return '<ol><li>Verify the module is installed: <code>npm install &lt;module-name&gt;</code>.</li><li>Check your <a href="https://storybook.js.org/docs/builders/webpack">Webpack</a> or <a href="https://storybook.js.org/docs/builders/vite">Vite</a> configuration for alias or resolve settings.</li></ol>';
+    case ERROR_CATEGORIES.DYNAMIC_MODULE_IMPORT_ERROR:
+      return '<ol><li>Check your <a href="https://storybook.js.org/docs/builders/vite">Vite configuration</a> and ensure dynamic imports are supported.</li><li>Verify the module path is correct and the file exists.</li></ol>';
+    case ERROR_CATEGORIES.SERVER_COMPONENTS_ERROR:
+      return '<ol><li>Add <code>"use client"</code> at the top of your component file if it uses browser APIs or React hooks.</li><li>See the <a href="https://storybook.js.org/docs/get-started/frameworks/nextjs">Next.js Storybook documentation</a> for guidance.</li></ol>';
+    case ERROR_CATEGORIES.COMPONENT_RENDER_ERROR:
+      return '<ol><li>Check for <code>null</code> or <code>undefined</code> values in your component props.</li><li>Ensure all required props are provided in your story <code>args</code>.</li></ol>';
+    default:
+      return '<ol><li>Check the browser console for additional error details.</li><li>Try reloading the page, or refer to the <a href="https://storybook.js.org/docs/writing-stories">Storybook documentation</a> for help.</li></ol>';
+  }
+}
 
 export class WebView implements View<HTMLElement> {
   private currentLayoutClass?: (typeof layoutClassMap)[keyof typeof layoutClassMap] | null;
@@ -145,6 +199,49 @@ export class WebView implements View<HTMLElement> {
 
     document.getElementById('error-message')!.innerHTML = ansiConverter.toHtml(header);
     document.getElementById('error-stack')!.innerHTML = ansiConverter.toHtml(detail);
+
+    // Categorize the error and provide targeted description, suggestions, and docs link
+    const { category } = categorizeError(message, stack);
+    const description = getCategoryDescription(category);
+    const docsLink = getDocsLink(category);
+    const suggestions = getCategorySuggestions(category);
+
+    const descriptionEl = document.getElementById('error-description');
+    if (descriptionEl) {
+      descriptionEl.textContent = description;
+    }
+
+    const suggestionsEl = document.getElementById('error-suggestions');
+    if (suggestionsEl) {
+      suggestionsEl.innerHTML = suggestions;
+    }
+
+    const docsLinkEl = document.getElementById('error-docs-link') as HTMLAnchorElement | null;
+    if (docsLinkEl) {
+      docsLinkEl.href = docsLink;
+    }
+
+    // Set up copy error button
+    const copyBtn = document.getElementById('error-copy');
+    if (copyBtn) {
+      copyBtn.onclick = () => {
+        const errorText = stack ? `${message}\n\n${stack}` : message;
+        navigator.clipboard
+          .writeText(errorText)
+          .then(() => {
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => {
+              copyBtn.textContent = 'Copy error';
+            }, 2000);
+          })
+          .catch(() => {
+            copyBtn.textContent = 'Copy failed';
+            setTimeout(() => {
+              copyBtn.textContent = 'Copy error';
+            }, 2000);
+          });
+      };
+    }
 
     this.showMode(Mode.ERROR);
   }

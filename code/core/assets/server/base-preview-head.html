@@ -197,6 +197,34 @@
       color: currentColor;
     }
 
+    & .sb-errordisplay_actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+
+      & a,
+      & button {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 13px;
+        font-weight: 600;
+        font-family: 'Nunito Sans', sans-serif;
+        cursor: pointer;
+        text-decoration: none;
+        border: 1px solid rgba(0, 0, 0, 0.2);
+        background: white;
+        color: #333;
+        transition: background 0.15s ease;
+
+        &:hover {
+          background: #f0f0f0;
+        }
+      }
+    }
+
     & .sb-errordisplay_code {
       padding: 10px;
       flex: 1;
