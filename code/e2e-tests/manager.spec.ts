@@ -282,6 +282,41 @@ test.describe('Manager UI', () => {
       const sbPage = new SbPage(page, expect);
       await expect(sbPage.page.locator('a[title="Storybook"]')).toBeVisible();
     });
+
+    // https://github.com/storybookjs/storybook/issues/30072
+    test('ArgType detail popover stays within viewport when content is tall', async ({ page }) => {
+      const sbPage = new SbPage(page, expect);
+
+      // Navigate to the story that has a tall detail popover (long icon names list)
+      await sbPage.navigateToStory(
+        'addons/docs/blocks/Components/ArgsTable/ArgRow',
+        'Long Detail Popover'
+      );
+
+      // The expandable button is inside the preview iframe
+      const previewFrame = sbPage.previewIframe();
+      const expandable = previewFrame.locator('.sbdocs-expandable').first();
+      await expect(expandable).toBeVisible();
+      await expandable.click();
+
+      // The popover dialog appears inside the iframe (portaled to iframe document body)
+      const dialog = previewFrame.getByRole('dialog');
+      await expect(dialog).toBeVisible();
+
+      // Wait for the dialog content to be rendered (first icon in the list)
+      await expect(previewFrame.getByRole('dialog').getByText("'filter'")).toBeVisible();
+
+      // The dialog must be scrollable (overflow: auto) so content doesn't overflow the viewport.
+      // scrollHeight > clientHeight confirms the content is taller than the visible area,
+      // and the computed overflow must be 'auto' or 'scroll' so it can be scrolled.
+      const { overflowY, scrollHeight, clientHeight } = await dialog.evaluate((el) => ({
+        overflowY: window.getComputedStyle(el).overflowY,
+        scrollHeight: el.scrollHeight,
+        clientHeight: el.clientHeight,
+      }));
+      expect(scrollHeight).toBeGreaterThan(clientHeight);
+      expect(['auto', 'scroll']).toContain(overflowY);
+    });
   });
 
   test.describe('Mobile', () => {

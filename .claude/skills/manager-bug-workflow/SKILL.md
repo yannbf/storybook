@@ -40,6 +40,7 @@ The internal Storybook includes several story directories. Add your story to whi
 | `code/core/template/stories/controls/`    | `core/controls/`               | Generic controls scenarios |
 | `code/addons/docs/src/blocks/controls/`   | `addons/docs/blocks/controls/` | ObjectControl, etc.        |
 | `code/addons/onboarding/example-stories/` | `Example/`                     | General button/UI examples |
+| `code/addons/docs/src/blocks/components/ArgsTable/` | `addons/docs/blocks/Components/ArgsTable/` | ArgRow, type detail popovers, ArgValue |
 
 **Story ID format** (needed for the E2E test URL):
 
@@ -93,6 +94,7 @@ export const ObjectWithFunction: StoryObj<typeof meta> = {
 - For object args with functions, `fn()` nested inside the object is correctly tracked by Storybook's Actions addon
 - Keep the component minimal — it just needs to make the affected behavior observable
 - **For Controls panel argType rows**: an argType only appears in the Controls panel if it has a corresponding `args` value AND a `control` type (e.g. `control: 'text'`). Setting only `table.type.detail` is not enough — the row won't render.
+- **⚠️ Controls panel uses compact mode**: The Controls panel in the story view (addon panel) uses compact mode — it only shows "Name" and "Control" columns, NOT the "Type" or "Default" columns. The `sbdocs-expandable` button (argType detail popover trigger) does NOT appear in the Controls panel. If your bug involves `table.type.detail` or `ArgValue`, add your story to `code/addons/docs/src/blocks/components/ArgsTable/ArgRow.stories.tsx` instead — those stories render the full ArgRow with all columns and are the correct place to test type detail popovers. Access the expandable button via `sbPage.previewIframe().locator('.sbdocs-expandable')`.
 
 ---
 
@@ -250,6 +252,33 @@ If the test fails with "Storybook iframe did not have children", it means the st
 **Debugging a failing test without screenshots**: When a test fails, Playwright writes `playwright-results/*/error-context.md` containing a full ARIA snapshot of the page at the point of failure. Read this file first — it shows exactly what elements are visible, their roles, and accessible names, without needing to open the trace viewer.
 
 **React-aria popover/dialog accessible name**: React-aria's `DialogTrigger`/`Popover` derives the dialog's accessible name from the trigger button label (via `aria-labelledby`), not from any `aria-label` prop passed to the popover container. When asserting `getByRole('dialog', { name: '...' })` for a `PopoverProvider`-based popover, use the trigger button's visible text as the name.
+
+**Iframe bounding box coordinate space**: When calling `dialog.boundingBox()` on an element obtained via `page.frameLocator(...)`, the returned coordinates are in the **page's absolute coordinate space** (not the iframe's internal coordinates). To check if a dialog inside an iframe is within the iframe's visible area, compare against `iframeBounds.y + iframeBounds.height` (NOT just `iframeBounds.height`):
+
+```typescript
+const iframeElement = page.locator('#storybook-preview-iframe');
+const iframeBounds = await iframeElement.boundingBox();
+const dialogBounds = await dialog.boundingBox();  // absolute page coords
+// ✅ Correct: compare against iframe's absolute bottom edge
+expect(dialogBounds!.y + dialogBounds!.height).toBeLessThanOrEqual(iframeBounds!.y + iframeBounds!.height);
+// ❌ Wrong: iframeBounds.height is just the height, ignores iframe's y offset
+```
+
+**Verifying overflow/scrollability in E2E tests**: For tests that verify an element is scrollable, check the computed CSS `overflowY` property rather than `scrollHeight > clientHeight`. The latter can be true even when `overflow: visible` (react-aria sets `max-height` causing content to overflow outside the element bounds), so it doesn't actually confirm scrollability:
+
+```typescript
+const { overflowY, scrollHeight, clientHeight } = await dialog.evaluate((el) => ({
+  overflowY: window.getComputedStyle(el).overflowY,
+  scrollHeight: el.scrollHeight,
+  clientHeight: el.clientHeight,
+}));
+// Wait for content to load BEFORE checking dimensions — dialog may open empty and populate async
+await expect(dialog.getByText("first-item")).toBeVisible();
+expect(scrollHeight).toBeGreaterThan(clientHeight);   // content is taller than visible area
+expect(['auto', 'scroll']).toContain(overflowY);      // element is actually scrollable
+```
+
+**⚠️ HMR stale cache when testing before/after states**: When reverting a fix locally to verify a test fails without it, the Vite dev server's HMR may NOT immediately apply the change in a browser session that was already connected. `el.getAttribute('style')` may still show the old inline styles. To reliably test the before state, **restart the dev server** after reverting the fix. Do not assume HMR worked just because you edited the file.
 
 ---
 

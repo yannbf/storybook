@@ -429,6 +429,85 @@ export const ComplexUnion = {
   },
 };
 
+// https://github.com/storybookjs/storybook/issues/30072
+// The detail popover must scroll rather than overflow the viewport
+const longIconNames = [
+  "'filter'",
+  "'search'",
+  "'close'",
+  "'info'",
+  "'alertCircle'",
+  "'alertTriangle'",
+  "'archive'",
+  "'arrowLeftToLine'",
+  "'arrowRightToLine'",
+  "'attachment'",
+  "'back'",
+  "'bookmark'",
+  "'bulletPoint'",
+  "'calendar'",
+  "'call'",
+  "'cart'",
+  "'chat'",
+  "'check'",
+  "'checkDocument'",
+  "'chevronDown'",
+  "'chevronLeft'",
+  "'chevronRight'",
+  "'chevronUp'",
+  "'contextMenu'",
+  "'dashboard'",
+  "'download'",
+  "'draggable'",
+  "'duplicate'",
+  "'edit'",
+  "'expand'",
+  "'eye'",
+  "'file'",
+  "'fullscreen'",
+  "'globe'",
+  "'home'",
+  "'infoCircle'",
+  "'list'",
+  "'locationPin'",
+  "'lock'",
+  "'logout'",
+  "'mail'",
+  "'menu'",
+  "'minus'",
+  "'plus'",
+  "'print'",
+  "'save'",
+  "'settings'",
+  "'star'",
+  "'trash'",
+  "'upload'",
+  "'user'",
+  "'zoomIn'",
+  "'zoomOut'",
+].join('\n| ');
+
+export const LongDetailPopover = {
+  args: {
+    row: {
+      key: 'icon',
+      name: 'icon',
+      type: {
+        required: false,
+      },
+      table: {
+        type: {
+          summary: 'IconName',
+          detail: longIconNames,
+        },
+      },
+      control: {
+        type: 'text',
+      },
+    },
+  },
+};
+
 export const Markdown = {
   args: {
     row: {
