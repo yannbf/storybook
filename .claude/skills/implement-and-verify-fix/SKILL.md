@@ -125,7 +125,13 @@ Check the flow number from your plan, then read and follow the corresponding fil
 
 **Flow 0** (Pure Logic / No UI): verification is already satisfied by Step 2 (all tests passed). Skip directly to Step 6.
 
-⚠️ **Double-check before accepting Flow 0**: If a user can reproduce this bug in the browser, Flow 0 is wrong — return to `plan-bug-fix` Step 2 to re-route.
+⚠️ **Double-check before accepting Flow 0**: Ask two questions:
+1. "Can a user reproduce this bug in the browser?" — if yes, Flow 0 is wrong.
+2. "Does the fix produce any visible change in the Storybook canvas, Manager UI, or any browser-rendered element?" — if yes, Flow 0 is wrong.
+
+Note: "I can verify the logic with unit tests" does NOT make something Flow 0. If the logic change has a visual manifestation (e.g., a redesigned error display, changed panel behavior), it requires Flow 1–4 even if the logic itself is unit-testable in isolation.
+
+If either check fails, return to `plan-bug-fix` Step 2 to re-route.
 
 ---
 

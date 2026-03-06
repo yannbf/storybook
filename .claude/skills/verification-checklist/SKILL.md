@@ -45,4 +45,5 @@ Once the universal checklist passes, move to the appropriate flow based on what 
 - **Flow 1**: Changes in `code/renderers/**` (renderer bugs) (Skill: renderer-bug-workflow)
 - **Flow 2**: Changes in `code/builders/**` affecting browser output (Skill: builder-bug-workflow)
 - **Flow 3**: Changes in `code/builders/**` affecting terminal output (Skill: builder-bug-workflow)
-- **Flow 4**: Changes in `code/core/src/manager/**` or `code/core/src/builder-manager/**` (Manager UI) (Skill: manager-bug-workflow)
+- **Flow 4 (Manager UI)**: Changes in `code/core/src/manager/**` or `code/core/src/builder-manager/**`, or any fix that manifests through the Controls panel, sidebar, toolbar, or addon panels (Skill: manager-bug-workflow)
+- **Flow 4 (Canvas/Preview)**: Changes in `preview-api/**` or `core/**` that produce a user-visible effect in the Storybook canvas — error displays, loading overlays, preview-web DOM elements (Skill: manager-bug-workflow, using a sandbox instead of internal Storybook)

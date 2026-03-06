@@ -7,6 +7,8 @@ description: Complete workflow for verifying Manager UI bug fixes in code/core/s
 
 When fixing bugs in `code/core/src/manager/**`, `code/core/src/builder-manager/**`, or any code that manifests as a bug in the Storybook Manager UI (Controls panel, sidebar, addon panels, etc.), follow this workflow to verify the fix with both automated E2E tests and visual evidence.
 
+This workflow also covers **canvas/preview-web UI bugs** — fixes in `preview-api/**` that affect user-visible elements in the Storybook canvas (error display / redbox, loading overlays, canvas DOM). For these, follow the same steps but use a **sandbox** (like the renderer-bug-workflow) instead of the internal Storybook, and skip the E2E test in Step 2 — screenshots alone are sufficient evidence.
+
 ---
 
 ## Step 1: Decide Whether You Need a New Story

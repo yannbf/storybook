@@ -54,7 +54,7 @@ Can you write 2-3 sentences that answer:
 
 **Action**: Route based on **where the bug manifests to the user**, NOT just where the fix lives in code.
 
-⚠️ **Critical rule**: A fix in `preview-api/` or `core/` can still require Flow 4 if the bug is triggered through the Manager UI. Always ask: _"Can a user reproduce this bug by interacting with the Storybook UI?"_ If yes, Flow 0 alone is never sufficient.
+⚠️ **Critical rule**: Route based on **where the bug manifests to the user**, not where the fix lives in code. A fix anywhere — `preview-api/`, `core/`, `manager/`, or any internal module — requires Flow 1–4 if the user can see its effect in the browser, whether in the Manager panels, the Storybook canvas, error displays, loading overlays, or any other browser-visible UI element. Flow 0 is never correct when the fix has any user-visible effect. Always ask: _"Can a user see this change in the browser?"_ If yes, Flow 0 alone is never sufficient.
 
 **Decision Tree** (execute in order):
 
@@ -75,6 +75,14 @@ ELSE IF the bug manifests through Manager UI interaction
      — regardless of which files the fix touches —
   ✓ FLOW 4: Manager UI Bug
 
+ELSE IF the bug is visible in the Storybook canvas or preview frame
+     (error display / redbox, loading overlay, canvas DOM elements, preview-web UI)
+     OR changed files are in preview-api/** and the fix has a user-visible rendering effect
+     — regardless of which files the fix touches —
+  ✓ FLOW 4: Canvas/Preview Visual Verification
+     → Use a sandbox (not the internal Storybook) with a story that triggers the affected behavior.
+       Capture before/after screenshots showing the visual change. No E2E test required.
+
 ELSE (bug is purely about logic, build output, or CLI with NO user-visible UI interaction)
   ✓ FLOW 0: Unit Tests Only
 ```
@@ -85,11 +93,15 @@ ELSE (bug is purely about logic, build output, or CLI with NO user-visible UI in
 - The fix has no visible effect on any Storybook panel, addon, or canvas
 - The bug is purely about logic correctness (parsing, data transformation, file generation, etc.)
 
-**Real-world example of a misrouting trap**: A fix in `preview-api/modules/store/ArgsStore.ts` (core logic) for a bug where the Controls panel strips function properties when editing objects → **this is Flow 4**, not Flow 0. The bug manifests through the Controls panel UI, even though the fix is in core preview-api code. An E2E test is required to confirm the UI behavior is actually fixed.
+**Real-world examples of misrouting traps**:
+
+- A fix in `preview-api/modules/store/ArgsStore.ts` (core logic) for a bug where the Controls panel strips function properties when editing objects → **this is Flow 4**, not Flow 0. The bug manifests through the Controls panel UI, even though the fix is in core preview-api code. An E2E test is required to confirm the UI behavior is actually fixed.
+
+- A fix in `preview-api/modules/preview-web/WebView.ts` that redesigns the error display ("redbox") → **this is Flow 4 (Canvas)**, not Flow 0. The error display is user-visible in the Storybook canvas. Unit tests can verify helper logic in isolation, but a sandbox with a story that throws an error is required to confirm the visual output is actually improved.
 
 **Success Criteria**: You have identified the exact flow number (0–4) and can name the verification skill.
 
-**Checkpoint**: Confirm routing is correct by asking "Can a user reproduce this bug in the browser?" — if yes, must be Flow 1–4, never Flow 0.
+**Checkpoint**: Confirm routing is correct by asking "Can a user see this change in the browser?" — if yes, must be Flow 1–4, never Flow 0.
 
 ---
 
