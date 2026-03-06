@@ -159,5 +159,12 @@ export const createGlobal = memoize(1)(({
     '.react-aria-Popover:focus-visible': {
       outline: 'none',
     },
+
+    // Ensure popovers with tall content (e.g. argType detail) are scrollable
+    // instead of overflowing the viewport. React-aria sets max-height based on
+    // available space but does not set overflow, so content can spill out.
+    '.react-aria-Popover[data-trigger="DialogTrigger"][role="dialog"]': {
+      overflow: 'auto',
+    },
   };
 });
