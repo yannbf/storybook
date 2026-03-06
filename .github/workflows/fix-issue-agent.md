@@ -25,11 +25,14 @@ tools:
   github:
     mode: remote
     toolsets: [default]
+  playwright:
 
 network:
   allowed:
     - node
     - defaults
+    - playwright
+    - localhost
 
 checkout:
   fetch-depth: 0
@@ -40,6 +43,13 @@ safe-outputs:
     labels: [agent, bug, ci:normal]
     draft: false
     if-no-changes: warn
+  update-pull-request:
+    body: true
+    title: false
+  upload-asset:
+    branch: "assets/fix-issue-agent"
+    allowed-exts: [.png, .jpg, .jpeg]
+    max: 10
   add-comment:
     max: 5
 ---
@@ -103,6 +113,25 @@ yarn --cwd code lint:js:cmd <file> --fix
 **Note**: Compilation and testing commands (`yarn nx compile`, `yarn test`, etc.) require `node_modules` which is NOT available in this environment. Skip those steps and rely on CI.
 
 ## PR Creation in This Context
+## Screenshots and Visual Verification
+
+For any verification flow that involves the Manager UI or visual output (Flow 1, 3, 4):
+
+1. Use the **Playwright tool** to launch a Chromium browser, navigate to `http://localhost:6006`, and take screenshots
+2. Save screenshots to `/tmp/` (e.g., `/tmp/before-fix.png`, `/tmp/after-fix.png`)
+3. Upload each screenshot with the `upload_asset` tool — it returns a public `raw.githubusercontent.com` URL
+4. Embed those URLs as Markdown images in the PR body's **Verification Evidence** section using `update_pull_request`
+
+Example PR body snippet:
+```
+## Verification Evidence
+**Before fix:**
+![before](https://raw.githubusercontent.com/yannbf/storybook/assets/fix-issue-agent/before-fix.png)
+**After fix:**
+![after](https://raw.githubusercontent.com/yannbf/storybook/assets/fix-issue-agent/after-fix.png)
+```
+
+If Playwright cannot render the page (e.g., build not ready), document the code-inspection evidence instead and note why screenshots were unavailable.
 
 This workflow runs inside GitHub Agentic Workflows (gh-aw) with read-only permissions. When the `open-pull-request` skill tells you to push the branch and create a PR:
 

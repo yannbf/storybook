@@ -180,11 +180,23 @@ If you created a new story file in Step 1a, the dev server will include it on fi
 
 ## Step 4: Capture Visual Evidence
 
-Use the Browser MCP to:
+Use the **Playwright tool** to take before/after screenshots:
 
-1. Open `http://localhost:6006/?path=/story/{your-story-id}`
+1. Navigate to `http://localhost:6006/?path=/story/{your-story-id}`
 2. Interact with the affected area of the Manager UI (Controls panel, sidebar, etc.)
-3. Take a screenshot (ideally by using ChromeDev MCP) showing the fix works correctly
+3. Take a screenshot showing the fix works correctly — save to `/tmp/after-fix.png`
+4. If you can reproduce the broken state (e.g., by reverting the fix temporarily or using a different story), take a before screenshot too — save to `/tmp/before-fix.png`
+
+Example Playwright steps:
+```js
+const browser = await chromium.launch();
+const page = await browser.newPage();
+await page.goto('http://localhost:6006/?path=/story/{your-story-id}');
+await page.waitForSelector('.sb-main-padded'); // wait for story to load
+// ... interact with the UI ...
+await page.screenshot({ path: '/tmp/after-fix.png', fullPage: false });
+await browser.close();
+```
 
 **What a "passing" screenshot shows**:
 
@@ -193,7 +205,7 @@ Use the Browser MCP to:
 - ✅ Interactive elements respond correctly to user actions
 - ✅ No error messages or console errors visible
 
-Save the screenshot locally. It will be uploaded directly into the PR description — do **not** commit it to the repository.
+After taking screenshots, upload them with the `upload_asset` tool. The tool returns a public `raw.githubusercontent.com` URL — save these URLs to embed in the PR body.
 
 **Evidence quality checklist**:
 
