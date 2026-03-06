@@ -63,7 +63,7 @@ Save the screenshot locally. It will be uploaded directly into the PR descriptio
 If the browser output still shows the bug:
 
 1. Kill the dev server
-2. Recompile: `yarn nx compile <package-name> -c production`
+2. Recompile: `yarn nx compile <package-name> -c production --no-cloud`
 3. Copy fresh `dist/` into the sandbox:
    - Source: `code/<package-path>/dist/`
    - Destination: `../storybook-sandboxes/<sandbox-dir>/node_modules/@storybook/<package-name>/dist/`

@@ -93,7 +93,7 @@ Use the `id` field in the URL. See `.claude/scripts/find-story.sh` for full usag
 If the story still shows the bug after initial verification:
 
 1. Kill the dev server
-2. Recompile the affected package: `yarn nx compile <package-name> -c production`
+2. Recompile the affected package: `yarn nx compile <package-name> -c production --no-cloud`
 3. Copy the fresh `dist/` from the compiled package into the sandbox:
    - Source: `code/<package-path>/dist/`
    - Destination: `../storybook-sandboxes/<sandbox-dir>/node_modules/@storybook/<package-name>/dist/`

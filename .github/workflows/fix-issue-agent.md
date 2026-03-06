@@ -95,10 +95,10 @@ Refer to `CLAUDE.md` for all commands. Key ones:
 
 ```bash
 # Compilation
-yarn nx compile <package-name>
+yarn nx compile <package-name> --no-cloud
 
 # Type checking
-yarn nx run-many -t check -c production
+yarn nx run-many -t check -c production --no-cloud
 
 # Testing
 cd code && yarn test
