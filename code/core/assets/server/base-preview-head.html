@@ -146,7 +146,7 @@
     color: black;
     border: 1px solid #ff0000;
     box-shadow: 0 0 64px rgba(0, 0, 0, 0.1);
-    gap: 24px;
+    gap: 16px;
 
     & ol {
       padding-left: 18px;
@@ -224,6 +224,73 @@
     & .sb-errordisplay pre {
       white-space: pre-wrap;
       white-space: revert;
+    }
+  }
+
+  .sb-errordisplay_header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .sb-errordisplay_copy {
+    flex-shrink: 0;
+    padding: 6px 12px;
+    font-family: Nunito Sans, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 16px;
+    cursor: pointer;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    background: white;
+    color: #333;
+    transition: background 150ms ease-out;
+
+    &:hover {
+      background: #f0f0f0;
+    }
+  }
+
+  .sb-errordisplay_description {
+    font-family: Nunito Sans;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 19px;
+    margin: 0;
+    color: #555;
+  }
+
+  .sb-errordisplay_help {
+    font-family: Nunito Sans;
+    font-size: 14px;
+    line-height: 19px;
+
+    & p {
+      margin: 0;
+    }
+
+    & code {
+      font-family: 'Operator Mono', 'Fira Code Retina', 'Fira Code', Consolas, Monaco, monospace;
+      font-size: 12px;
+      padding: 1px 4px;
+      border-radius: 3px;
+      background: #f0f0f0;
+      color: #333;
+    }
+  }
+
+  .sb-errordisplay_docs {
+    display: inline-block;
+    font-family: Nunito Sans;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1ea7fd;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
     }
   }
 
