@@ -7,6 +7,10 @@ import AnsiToHtml from 'ansi-to-html';
 import { parse } from 'picoquery';
 import { dedent } from 'ts-dedent';
 
+import {
+  categorizeError,
+  getCategoryDescription,
+} from '../../../shared/utils/categorize-render-errors';
 import type { View } from './View';
 
 const { document } = global;
@@ -143,7 +147,21 @@ export class WebView implements View<HTMLElement> {
       detail = parts.slice(1).join('\n').replace(/^\n/, '');
     }
 
+    const { category } = categorizeError(message, stack);
+    const description = getCategoryDescription(category);
+
+    const errorDisplay = document.getElementById('error-display');
+    if (errorDisplay) {
+      errorDisplay.setAttribute('data-error-category', category);
+    }
+
     document.getElementById('error-message')!.innerHTML = ansiConverter.toHtml(header);
+
+    const descriptionEl = document.getElementById('error-description');
+    if (descriptionEl) {
+      descriptionEl.textContent = description;
+    }
+
     document.getElementById('error-stack')!.innerHTML = ansiConverter.toHtml(detail);
 
     this.showMode(Mode.ERROR);

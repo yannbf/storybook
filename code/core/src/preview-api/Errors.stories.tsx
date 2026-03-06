@@ -36,7 +36,10 @@ const Component = ({ id, header, detail }: any) => {
   }
 
   // remove the ids, otherwise chromatic will assume the story failed to render
-  const content = element.outerHTML.replace('error-message', '').replace('error-stack', '');
+  const content = element.outerHTML
+    .replace('error-message', '')
+    .replace('error-description', '')
+    .replace('error-stack', '');
 
   // remove the content, otherwise chromatic will assume the story failed to render
   document.getElementById('error-message')!.innerHTML = '';
