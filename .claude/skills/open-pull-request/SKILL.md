@@ -211,7 +211,7 @@ Terminal output now matches expected format without build-specific noise.
 
 ### 2c: AI Disclaimer section
 
-Add an AI disclaimer explaining that the PR was created by AI, listing every skill that was invoked during the workflow.
+Add an AI disclaimer explaining that the PR was created by AI, listing every skill that was invoked during the workflow and cost and usage breakdown.
 
 ```markdown
 ## AI Disclaimer
@@ -225,6 +225,11 @@ Add an AI disclaimer explaining that the PR was created by AI, listing every ski
   - `/verification-checklist`
   - `/<flow-specific-skill>` (e.g. `/renderer-bug-workflow`, `/builder-bug-workflow`, `/manager-bug-workflow` — omit if Flow 0)
   - `/open-pull-request`
+- Usage breakdown:
+  - Total usage est:        1 Premium request
+  - API time spent:         7m 12s
+  - Total session time:     13m 18s
+  - Token usage: 4.1m in, 22.5k out, 4.0m cached
 - Human Oversight: <reviewed-by-human yes/no + notes>
 ```
 
