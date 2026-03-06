@@ -282,6 +282,32 @@ test.describe('Manager UI', () => {
       const sbPage = new SbPage(page, expect);
       await expect(sbPage.page.locator('a[title="Storybook"]')).toBeVisible();
     });
+
+    // https://github.com/yannbf/storybook/issues/7
+    test('argType detail popover does not overflow viewport when content is tall', async ({
+      page,
+    }) => {
+      const sbPage = new SbPage(page, expect);
+
+      await sbPage.navigateToStory('core/controls/issues', 'Tall Detail Popover');
+      await sbPage.viewAddonPanel('Controls');
+
+      // Click the expandable button to open the detail popover
+      const expandable = sbPage.panelContent().locator('.sbdocs-expandable').first();
+      await expandable.click();
+
+      // The popover should be visible
+      const popover = sbPage.page.getByRole('dialog', { name: 'Arg value details' });
+      await expect(popover).toBeVisible();
+
+      // Verify the popover does not overflow the viewport
+      const viewportHeight = page.viewportSize()?.height ?? 768;
+      const popoverBox = await popover.boundingBox();
+      expect(popoverBox).not.toBeNull();
+      if (popoverBox) {
+        expect(popoverBox.y + popoverBox.height).toBeLessThanOrEqual(viewportHeight);
+      }
+    });
   });
 
   test.describe('Mobile', () => {

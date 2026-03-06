@@ -15,3 +15,23 @@ export const MissingRadioOptions = {
   argTypes: { invalidRadio: { control: 'radio' } },
   args: { invalidRadio: 'someValue' },
 };
+
+// https://github.com/yannbf/storybook/issues/7
+export const TallDetailPopover = {
+  argTypes: {
+    icon: {
+      control: 'text',
+      table: {
+        type: {
+          summary: 'IconName',
+          detail: Array.from(
+            { length: 50 },
+            (_, i) =>
+              `'filter' | 'search' | 'close' | 'info' | 'alertCircle' | 'icon${String(i)}'`
+          ).join('\n| '),
+        },
+      },
+    },
+  },
+  args: { icon: 'filter' },
+};
