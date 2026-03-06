@@ -314,16 +314,6 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
-      - name: Setup Node.js and Install Dependencies
-        uses: ./.github/actions/setup-node-and-install
-        with:
-          install-code-deps: true
-      - name: Install Playwright browsers
-        run: cd code && yarn playwright install --with-deps chromium
-      - name: Compile
-        run: yarn nx run-many --targets compile
-        env:
-          NX_CLOUD_ACCESS_TOKEN: ${{ vars.COPILOT_NX_CLOUD_ACCESS_TOKEN }}
       - name: Create gh-aw temp directory
         run: bash /opt/gh-aw/actions/create_gh_aw_tmp_dir.sh
       - name: Configure Git credentials
@@ -899,7 +889,7 @@ jobs:
       - name: Execute GitHub Copilot CLI
         id: agentic_execution
         # Copilot CLI tool arguments (sorted):
-        timeout-minutes: 60
+        timeout-minutes: 20
         run: |
           set -o pipefail
           # shellcheck disable=SC1003
@@ -1273,7 +1263,7 @@ jobs:
           GH_AW_CODE_PUSH_FAILURE_ERRORS: ${{ needs.safe_outputs.outputs.code_push_failure_errors }}
           GH_AW_CODE_PUSH_FAILURE_COUNT: ${{ needs.safe_outputs.outputs.code_push_failure_count }}
           GH_AW_GROUP_REPORTS: "false"
-          GH_AW_TIMEOUT_MINUTES: "60"
+          GH_AW_TIMEOUT_MINUTES: "20"
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
