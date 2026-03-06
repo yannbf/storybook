@@ -1,11 +1,11 @@
 ---
 name: open-pull-request
-description: Push branch, open PR targeting next, and apply required labels. Works in both CLI (Claude Code) and GitHub.com Copilot agent environments.
+description: Push branch, open PR targeting next, and apply required labels. Works in any agent environment — use whatever mechanism is available to push the branch and create the PR.
 ---
 
 # Open Pull Request Workflow
 
-**What this skill does**: Pushes the feature branch, creates the PR targeting `next`, applies required labels (`agent`, `bug`) via a separate `gh pr edit` command, and populates the PR body with flow-specific evidence.
+**What this skill does**: Pushes the feature branch, creates the PR targeting `next`, applies required labels (`agent`, `bug`, `ci:normal`), and populates the PR body with flow-specific evidence.
 
 ## Input & Prerequisites
 
@@ -256,30 +256,18 @@ Combine the base template (Section 2a) with your flow-specific section (Section 
 
 If any box is unchecked, **do not proceed** — return to the appropriate verification step.
 
-Run these commands from the repo root:
+**Action**: Using whatever mechanism is available in your execution context:
 
-```bash
-# Push branch
-git push origin agent/fix-issue-NNNN
+1. **Push the feature branch** (`agent/fix-issue-NNNN`) to the remote origin
+2. **Create a pull request** targeting the `next` branch with your prepared title and body
+3. **Apply labels** to the PR: `agent`, `bug`, `ci:normal`
+   - `agent` — marks this as an AI-agent-created PR
+   - `bug` — issue type
+   - `ci:normal` — triggers the standard CI sandbox run (only valid once all verification evidence is complete)
 
-# Create PR targeting next (do NOT include --label here — apply labels separately)
-gh pr create \
-  --base next \
-  --title "YOUR TITLE HERE" \
-  --body 'YOUR BODY HERE'
+⚠️ **Label permissions**: If you cannot apply labels directly, leave a comment on the PR requesting them:
 
-# Attempt to apply labels (may fail for non-maintainers — see note below)
-# ci:normal is only added here because verification is confirmed complete above
-gh pr edit <PR-NUMBER> --add-label "agent,bug,ci:normal" || true
-```
-
-**Required labels**: `agent` (AI-agent-created), `bug` (issue type), `ci:normal` (triggers CI — only valid once all verification evidence is complete).
-
-⚠️ **Label permissions**: Only maintainers and Copilot agents with write access can apply labels. If `gh pr edit --add-label` fails, leave a comment on the PR instead:
-
-```bash
-gh pr comment <PR-NUMBER> --body "Labels to apply: \`agent\`, \`bug\`, \`ci:normal\`"
-```
+> Labels to apply: `agent`, `bug`, `ci:normal`
 
 **Success Criteria**:
 
@@ -295,9 +283,9 @@ gh pr comment <PR-NUMBER> --body "Labels to apply: \`agent\`, \`bug\`, \`ci:norm
 
 ### "Labels not applied"
 
-→ If you have write access: `gh pr edit <PR-NUMBER> --add-label "agent,bug,ci:normal"`
-→ If you lack permissions (non-maintainer): `gh pr comment <PR-NUMBER> --body "Labels to apply: \`agent\`, \`bug\`, \`ci:normal\`"`
-→ **Never apply `ci:normal` if verification evidence is incomplete** — remove it and fix the PR body first
+→ If you have write access: apply labels `agent`, `bug`, `ci:normal` directly on the PR
+→ If you lack permissions: leave a comment on the PR listing the labels to apply
+→ **Never apply `ci:normal` if verification evidence is incomplete** — fix the PR body first
 
 ### "Description is incomplete or missing evidence"
 
@@ -311,6 +299,6 @@ gh pr comment <PR-NUMBER> --body "Labels to apply: \`agent\`, \`bug\`, \`ci:norm
 
 1. **Prepare PR Title** (clear, descriptive format)
 2. **Prepare PR Body** (base template + flow-specific evidence)
-3. **Push branch, create PR, then apply labels separately** via `gh pr edit --add-label`
+3. **Push branch, create PR, then apply labels** — use whatever mechanism your execution context provides
 
 Success is when: ✅ PR open on GitHub, ✅ `agent` + `bug` labels applied, ✅ Evidence complete.

@@ -101,33 +101,19 @@ cd code && yarn test
 
 ## Step 4: Commit Changes
 
-**Action**: Create a commit with a clear, descriptive message.
+**Action**: Stage all changed files and create a commit with a clear, descriptive message.
 
-First, derive the issue number from the current branch name:
+The issue number can be derived from the current branch name (e.g. `agent/fix-issue-12345` → issue `12345`).
 
-```bash
-git branch --show-current
-# e.g. agent/fix-issue-12345 → issue number is 12345
+Commit message format:
+
+```
+Fix: Issue #[issue-number] — [Brief description from issue title]
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
 ```
 
-Then commit:
-
-```bash
-git add <changed-files>
-git commit -m "Fix: Issue #[issue-number] — [Brief description from issue title]
-
-Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
-```
-
-Example:
-
-```bash
-git commit -m "Fix: Issue #12345 — React renderer not applying CSS to styled components
-
-Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
-```
-
-**Success Criteria**: Commit created with clear message. `git log --oneline` shows the commit.
+**Success Criteria**: Commit created with clear message and the Co-authored-by trailer included.
 
 ---
 
@@ -177,23 +163,20 @@ Expected output: Passing E2E test + before/after screenshots of Manager UI.
 
 ## Step 6: Commit Code Artifacts
 
-**Action**: Commit any new or modified code artifacts produced by the verification workflow. Screenshots are **not** committed — they will be uploaded directly in the PR description.
+**Action**: Stage and commit any new or modified code artifacts produced by the verification workflow. Screenshots are **not** committed — they will be uploaded directly in the PR description.
 
 Artifacts to commit (only those that apply to your flow):
 
-```bash
-# Flow 1 / Flow 2: new template story file
-git add code/renderers/<renderer>/template/stories/<new-story-file>.stories.tsx
+- **Flow 1 / Flow 2**: new template story file at `code/renderers/<renderer>/template/stories/`
+- **Flow 3**: updated terminal output snapshot at `scripts/terminal-output-snapshots/`
+- **Flow 4**: new or updated E2E test file at `code/e2e-tests/manager.spec.ts`
 
-# Flow 3: updated terminal output snapshot
-git add scripts/terminal-output-snapshots/
+Commit message format:
 
-# Flow 4: new or updated E2E test file
-git add code/e2e-tests/manager.spec.ts
+```
+Add: Verification artifacts for issue #[issue-number]
 
-git commit -m "Add: Verification artifacts for issue #[issue-number]
-
-Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
 ```
 
 **Success Criteria** (all must be true):

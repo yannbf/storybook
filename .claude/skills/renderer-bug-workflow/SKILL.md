@@ -50,11 +50,7 @@ cd ../storybook-sandboxes/<sandbox-dir> && yarn storybook --ci
 ### Important Notes
 
 - **Startup time**: The sandbox dev server typically takes **30–90 seconds** on first cold start; wait for the console to emit `"Storybook X.Y started"` before opening the browser.
-- **Known failure — port in use**: If port 6006 is occupied, kill the incumbent process:
-  ```bash
-  lsof -ti :6006 | xargs kill -9
-  ```
-  Then retry starting the dev server.
+- **Known failure — port in use**: If port 6006 is occupied by another process, terminate that process and retry starting the dev server.
 
 Check the console output for "Storybook started" or similar confirmation before proceeding.
 

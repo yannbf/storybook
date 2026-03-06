@@ -146,18 +146,10 @@ Evidence: [screenshot / snapshot / E2E result]
 
 ## Step 4: Create Feature Branch
 
-**Action**: Create and checkout a dedicated branch for this fix.
+**Action**: Create and switch to a new branch named `agent/fix-issue-$ARGUMENTS[0]`.
 
-```bash
-git checkout -b agent/fix-issue-$ARGUMENTS[0]
-```
-
-Example:
-
-```bash
-git checkout -b agent/fix-issue-12345
-```
+The branch name must follow this exact format — e.g. `agent/fix-issue-12345` for issue 12345.
 
 **Success Criteria**:
 
-- [ ] On branch `agent/fix-issue-$ARGUMENTS[0]` (verify with `git branch --show-current`)
+- [ ] Currently on branch `agent/fix-issue-$ARGUMENTS[0]`
