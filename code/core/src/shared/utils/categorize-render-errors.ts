@@ -231,6 +231,95 @@ function getMatchedDependencies(category: ErrorCategory, ctx: ErrorContext): str
   }
 }
 
+/** For a given category, return actionable guidance items to help resolve the error. */
+export function getCategoryGuidanceItems(category: ErrorCategory): string[] {
+  switch (category) {
+    case ERROR_CATEGORIES.MISSING_STATE_PROVIDER:
+    case ERROR_CATEGORIES.MISSING_ROUTER_PROVIDER:
+    case ERROR_CATEGORIES.MISSING_THEME_PROVIDER:
+    case ERROR_CATEGORIES.MISSING_TRANSLATION_PROVIDER:
+    case ERROR_CATEGORIES.MISSING_PROVIDER:
+      return [
+        'Wrap your component with the required provider using a <a href="https://storybook.js.org/docs/writing-stories/decorators">decorator</a>.',
+        'Check if your project has a global decorator in <code>.storybook/preview.js</code> that supplies this context.',
+      ];
+
+    case ERROR_CATEGORIES.HOOK_USAGE_ERROR:
+      return [
+        'Ensure React hooks are only called inside function components or custom hooks.',
+        'Check for conditional hook calls or hooks called in loops.',
+        'See the <a href="https://react.dev/warnings/invalid-hook-call-warning">React hooks rules</a> for more details.',
+      ];
+
+    case ERROR_CATEGORIES.MODULE_IMPORT_ERROR:
+      return [
+        'Verify the module path is correct and the package is installed.',
+        'Check your <a href="https://storybook.js.org/docs/builders/webpack">Webpack</a> or <a href="https://storybook.js.org/docs/builders/vite">Vite</a> configuration for missing aliases or loaders.',
+      ];
+
+    case ERROR_CATEGORIES.SERVER_COMPONENTS_ERROR:
+      return [
+        'Storybook renders components in the browser — Server Components are not supported in the canvas.',
+        'Add a <code>"use client"</code> directive or create a client wrapper for your story.',
+      ];
+
+    case ERROR_CATEGORIES.DYNAMIC_MODULE_IMPORT_ERROR:
+      return [
+        'Try reloading the page, as this can be caused by a stale module cache.',
+        'Check your Vite configuration for any dynamic import issues.',
+      ];
+
+    case ERROR_CATEGORIES.MISSING_PORTAL_ROOT:
+      return [
+        'Ensure a valid DOM element exists for portal rendering.',
+        'Use a decorator to provide the portal container element.',
+      ];
+
+    case ERROR_CATEGORIES.TEST_FILE_IMPORT_ERROR:
+      return [
+        'Verify your test setup file exists and is correctly configured.',
+        'Check for syntax errors or missing imports in the test file.',
+      ];
+
+    case ERROR_CATEGORIES.COMPONENT_RENDER_ERROR:
+      return [
+        'Check for <code>null</code> or <code>undefined</code> values being accessed in your component.',
+        'Review the stack trace below to locate the exact render failure.',
+      ];
+
+    default:
+      return [
+        '<strong>Missing Context/Providers:</strong> Use <a href="https://storybook.js.org/docs/writing-stories/decorators">decorators</a> to supply specific contexts or providers.',
+        '<strong>Misconfigured Webpack or Vite:</strong> Verify your <a href="https://storybook.js.org/docs/builders/webpack">Webpack</a> or <a href="https://storybook.js.org/docs/builders/vite">Vite</a> settings.',
+        '<strong>Missing Environment Variables:</strong> Set up <a href="https://storybook.js.org/docs/configure/environment-variables">environment variables</a> as needed.',
+      ];
+  }
+}
+
+/** For a given category, return a documentation URL for further reading, or null if none. */
+export function getCategoryDocsLink(category: ErrorCategory): string | null {
+  switch (category) {
+    case ERROR_CATEGORIES.MISSING_STATE_PROVIDER:
+    case ERROR_CATEGORIES.MISSING_ROUTER_PROVIDER:
+    case ERROR_CATEGORIES.MISSING_THEME_PROVIDER:
+    case ERROR_CATEGORIES.MISSING_TRANSLATION_PROVIDER:
+    case ERROR_CATEGORIES.MISSING_PROVIDER:
+      return 'https://storybook.js.org/docs/writing-stories/decorators';
+
+    case ERROR_CATEGORIES.HOOK_USAGE_ERROR:
+      return 'https://react.dev/warnings/invalid-hook-call-warning';
+
+    case ERROR_CATEGORIES.MODULE_IMPORT_ERROR:
+      return 'https://storybook.js.org/docs/builders/webpack';
+
+    case ERROR_CATEGORIES.SERVER_COMPONENTS_ERROR:
+      return 'https://storybook.js.org/docs/get-started/frameworks/nextjs';
+
+    default:
+      return null;
+  }
+}
+
 /** For a given category, return a description of the error for better legibility. */
 export function getCategoryDescription(category: ErrorCategory): string {
   switch (category) {

@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ERROR_CATEGORIES, categorizeError } from './categorize-render-errors';
+import {
+  ERROR_CATEGORIES,
+  categorizeError,
+  getCategoryDocsLink,
+  getCategoryGuidanceItems,
+} from './categorize-render-errors';
 
 describe('categorize-render-errors', () => {
   beforeEach(() => {
@@ -271,6 +276,48 @@ describe('categorize-render-errors', () => {
 
         expect(result.matchedDependencies).toEqual(['styled-components', '@emotion/react']);
       });
+    });
+  });
+
+  describe('getCategoryGuidanceItems', () => {
+    it('should return provider-related guidance for MISSING_PROVIDER categories', () => {
+      const items = getCategoryGuidanceItems(ERROR_CATEGORIES.MISSING_PROVIDER);
+      expect(items.length).toBeGreaterThan(0);
+      expect(items.some((item) => item.includes('decorator'))).toBe(true);
+    });
+
+    it('should return hook-related guidance for HOOK_USAGE_ERROR', () => {
+      const items = getCategoryGuidanceItems(ERROR_CATEGORIES.HOOK_USAGE_ERROR);
+      expect(items.length).toBeGreaterThan(0);
+      expect(items.some((item) => item.toLowerCase().includes('hook'))).toBe(true);
+    });
+
+    it('should return module-related guidance for MODULE_IMPORT_ERROR', () => {
+      const items = getCategoryGuidanceItems(ERROR_CATEGORIES.MODULE_IMPORT_ERROR);
+      expect(items.length).toBeGreaterThan(0);
+      expect(items.some((item) => item.toLowerCase().includes('module'))).toBe(true);
+    });
+
+    it('should return generic guidance for UNKNOWN_ERROR', () => {
+      const items = getCategoryGuidanceItems(ERROR_CATEGORIES.UNKNOWN_ERROR);
+      expect(items.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('getCategoryDocsLink', () => {
+    it('should return a docs link for MISSING_PROVIDER categories', () => {
+      const link = getCategoryDocsLink(ERROR_CATEGORIES.MISSING_PROVIDER);
+      expect(link).toContain('storybook.js.org');
+    });
+
+    it('should return a docs link for HOOK_USAGE_ERROR', () => {
+      const link = getCategoryDocsLink(ERROR_CATEGORIES.HOOK_USAGE_ERROR);
+      expect(link).not.toBeNull();
+    });
+
+    it('should return null for UNKNOWN_ERROR', () => {
+      const link = getCategoryDocsLink(ERROR_CATEGORIES.UNKNOWN_ERROR);
+      expect(link).toBeNull();
     });
   });
 });

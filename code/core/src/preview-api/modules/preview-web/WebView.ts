@@ -3,6 +3,13 @@ import type { PreparedStory } from 'storybook/internal/types';
 
 import { global } from '@storybook/global';
 
+import {
+  categorizeError,
+  getCategoryDescription,
+  getCategoryDocsLink,
+  getCategoryGuidanceItems,
+} from '../../../shared/utils/categorize-render-errors';
+
 import AnsiToHtml from 'ansi-to-html';
 import { parse } from 'picoquery';
 import { dedent } from 'ts-dedent';
@@ -145,6 +152,40 @@ export class WebView implements View<HTMLElement> {
 
     document.getElementById('error-message')!.innerHTML = ansiConverter.toHtml(header);
     document.getElementById('error-stack')!.innerHTML = ansiConverter.toHtml(detail);
+
+    // Use error categorization to show actionable guidance
+    const { category } = categorizeError(message, stack);
+    const description = getCategoryDescription(category);
+    const guidanceItems = getCategoryGuidanceItems(category);
+    const docsLink = getCategoryDocsLink(category);
+
+    const descEl = document.getElementById('error-category-description');
+    if (descEl) {
+      descEl.textContent = description;
+    }
+
+    const guidanceEl = document.getElementById('error-guidance');
+    if (guidanceEl) {
+      guidanceEl.innerHTML = guidanceItems.map((item) => `<li>${item}</li>`).join('');
+    }
+
+    const docsLinkEl = document.getElementById('error-docs-link');
+    if (docsLinkEl) {
+      if (docsLink) {
+        (docsLinkEl as HTMLAnchorElement).href = docsLink;
+        docsLinkEl.removeAttribute('hidden');
+      } else {
+        docsLinkEl.setAttribute('hidden', '');
+      }
+    }
+
+    const copyBtn = document.getElementById('error-copy-btn');
+    if (copyBtn) {
+      copyBtn.onclick = () => {
+        const errorText = `${message}\n\n${stack}`.trim();
+        navigator.clipboard?.writeText(errorText).catch(() => {});
+      };
+    }
 
     this.showMode(Mode.ERROR);
   }
