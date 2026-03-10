@@ -39,10 +39,32 @@ Finds open issues with `needs-reproduction` or `needs-info` older than 60 days w
 
 #### `agent-bug-fix-trigger.md` — Auto-assign Copilot on `agent-fix` label
 
-**Trigger**: any label added to an issue  
+**Trigger**: any label added to an issue
 **Safe outputs**: `assign-to-agent` (copilot), `add-comment` (max 1), `add-labels` (`agent-in-progress`)
 
 When a maintainer adds `agent-fix` to an issue, this validates the issue is actionable and assigns the Copilot coding agent to it. Copilot then follows the skill workflow defined in `CLAUDE.md` and `.claude/skills/fix-bug/SKILL.md`.
+
+---
+
+#### `agent-workflow-analyzer.md` — Intelligent flow determination + Copilot assignment
+
+**Trigger**: any label added to an issue (specifically `agent-workflow`)
+**Safe outputs**: `add-comment` (max 1), `add-labels` (flow labels + `agent-ready`, max 2), `assign-to-agent` (copilot)
+
+**Two-stage agentic pipeline**: When a maintainer adds `agent-workflow` to an issue, this workflow analyzes the bug report and determines the appropriate verification flow (0-4) based on file paths, keywords, and affected areas. It then:
+
+1. **Analyzes** the issue content using `contents: read` to verify file paths
+2. **Determines** which verification flow applies:
+   - Flow 0: Quick fix (no runtime testing)
+   - Flow 1: Renderer bug (visual verification)
+   - Flow 2: Builder frontend output (hash comparison)
+   - Flow 3: Builder terminal output (stdout/stderr)
+   - Flow 4: Manager UI (E2E Playwright tests)
+3. **Posts** a structured analysis comment with rationale, affected areas, and specific instructions
+4. **Labels** the issue with the determined flow (e.g., `flow-1-renderer`) + `agent-ready`
+5. **Assigns** Copilot with full context already in place
+
+When Copilot picks up the issue, it reads the analysis comment to understand which verification workflow to follow, creating an intelligent preprocessing layer that guides the executor agent.
 
 ---
 
@@ -64,6 +86,10 @@ Posts a compact comment summarizing the PR's changed area, template compliance, 
 | `flakiness`, `ci` | ci-flake-detector |
 | `stale` | stale-issue-processor |
 | `agent-fix` | maintainers (manual trigger) |
+| `agent-workflow` | maintainers (manual trigger) |
 | `agent-in-progress` | agent-bug-fix-trigger |
+| `agent-ready` | agent-workflow-analyzer |
+| `flow-0-quick-fix`, `flow-1-renderer`, `flow-2-builder-frontend`, `flow-3-builder-terminal`, `flow-4-manager-ui` | agent-workflow-analyzer |
+| `needs-clarification` | agent-workflow-analyzer |
 
 All labels in the `add-labels` safe-outputs use an explicit `allowed` list and a `blocked: ["~*", "*[bot]"]` glob guard to prevent prompt injection via label names.
