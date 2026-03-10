@@ -81,39 +81,124 @@
   </div>
 </div>
 
-<div class="sb-errordisplay sb-wrapper">
+<div id="error-display" class="sb-errordisplay sb-wrapper">
   <div class="sb-errordisplay_main">
     <h1 id="error-message"></h1>
-    <p>
-      The component failed to render properly, likely due to a configuration issue in Storybook.
-      Here are some common causes and how you can address them:
-    </p>
-    <ol>
-      <li>
-        <strong>Missing Context/Providers</strong>: You can use decorators to supply specific
-        contexts or providers, which are sometimes necessary for components to render correctly. For
-        detailed instructions on using decorators, please visit the
-        <a href="https://storybook.js.org/docs/writing-stories/decorators"
-          >Decorators documentation</a
-        >.
-      </li>
-      <li>
-        <strong>Misconfigured Webpack or Vite</strong>: Verify that Storybook picks up all necessary
-        settings for loaders, plugins, and other relevant parameters. You can find step-by-step
-        guides for configuring
+    <p id="error-description" class="sb-errordisplay_description"></p>
+
+    <!-- Missing provider guidance -->
+    <div class="sb-errordisplay_guidance sb-errordisplay_guidance--missing-provider">
+      <p>
+        <strong>Missing Context / Provider</strong>: Use decorators to supply the required context
+        or provider to your story. For detailed instructions, see the
+        <a href="https://storybook.js.org/docs/writing-stories/decorators">Decorators documentation</a>.
+      </p>
+    </div>
+
+    <!-- Module import guidance -->
+    <div class="sb-errordisplay_guidance sb-errordisplay_guidance--module-import">
+      <p>
+        <strong>Misconfigured Webpack or Vite</strong>: Verify that Storybook picks up all
+        necessary settings for loaders, plugins, and other relevant parameters. See the
         <a href="https://storybook.js.org/docs/builders/webpack">Webpack</a> or
-        <a href="https://storybook.js.org/docs/builders/vite">Vite</a>
-        with Storybook.
-      </li>
-      <li>
-        <strong>Missing Environment Variables</strong>: Your Storybook may require specific
-        environment variables to function as intended. You can set up custom environment variables
-        as outlined in the
-        <a href="https://storybook.js.org/docs/configure/environment-variables"
-          >Environment Variables documentation</a
-        >.
-      </li>
-    </ol>
+        <a href="https://storybook.js.org/docs/builders/vite">Vite</a> configuration guides.
+      </p>
+    </div>
+
+    <!-- Hook usage guidance -->
+    <div class="sb-errordisplay_guidance sb-errordisplay_guidance--hook-usage">
+      <p>
+        <strong>Invalid Hook Call</strong>: React Hooks must be called at the top level of a
+        function component or a custom Hook. They cannot be called inside loops, conditions, or
+        nested functions. See the
+        <a href="https://react.dev/warnings/invalid-hook-call-warning">React Hooks documentation</a>.
+      </p>
+    </div>
+
+    <!-- Server components guidance -->
+    <div class="sb-errordisplay_guidance sb-errordisplay_guidance--server-components">
+      <p>
+        <strong>Server Components</strong>: This component appears to use React Server Components
+        which cannot run in the browser. Add a <code>"use client"</code> directive at the top of
+        the component file, or use a wrapper story that provides client-side context.
+      </p>
+    </div>
+
+    <!-- Unknown error / generic guidance -->
+    <div class="sb-errordisplay_guidance sb-errordisplay_guidance--unknown">
+      <p>
+        The component failed to render properly, likely due to a configuration issue in Storybook.
+        Here are some common causes:
+      </p>
+      <ol>
+        <li>
+          <strong>Missing Context/Providers</strong>: Use decorators to supply specific contexts or
+          providers. See the
+          <a href="https://storybook.js.org/docs/writing-stories/decorators">Decorators documentation</a>.
+        </li>
+        <li>
+          <strong>Misconfigured Webpack or Vite</strong>: Verify that Storybook picks up all
+          necessary settings. See the
+          <a href="https://storybook.js.org/docs/builders/webpack">Webpack</a> or
+          <a href="https://storybook.js.org/docs/builders/vite">Vite</a> guides.
+        </li>
+        <li>
+          <strong>Missing Environment Variables</strong>: Your Storybook may require specific
+          environment variables. See the
+          <a href="https://storybook.js.org/docs/configure/environment-variables">Environment Variables documentation</a>.
+        </li>
+      </ol>
+    </div>
+
     <pre class="sb-errordisplay_code"><code id="error-stack"></code></pre>
+
+    <div class="sb-errordisplay_actions">
+      <button id="error-copy-btn" class="sb-errordisplay_copy-btn" type="button" aria-label="Copy error to clipboard">
+        Copy error
+      </button>
+      <span id="error-copy-status" class="sb-sr-only" aria-live="polite" aria-atomic="true"></span>
+    </div>
   </div>
 </div>
+
+<script>
+  /* globals document */
+  (function () {
+    function setupCopyButton() {
+      var btn = document.getElementById('error-copy-btn');
+      if (!btn) return;
+      btn.addEventListener('click', function () {
+        var desc = document.getElementById('error-description');
+        var msg = document.getElementById('error-message');
+        var stack = document.getElementById('error-stack');
+        var status = document.getElementById('error-copy-status');
+        var parts = [
+          desc ? desc.textContent || '' : '',
+          msg ? msg.textContent || '' : '',
+          stack ? stack.textContent || '' : '',
+        ].filter(Boolean);
+        var text = parts.join('\n\n');
+        navigator.clipboard.writeText(text.trim()).then(function () {
+          btn.textContent = 'Copied!';
+          if (status) status.textContent = 'Error copied to clipboard';
+          setTimeout(function () {
+            btn.textContent = 'Copy error';
+            if (status) status.textContent = '';
+          }, 2000);
+        }).catch(function () {
+          btn.textContent = 'Copy failed';
+          if (status) status.textContent = 'Failed to copy error to clipboard';
+          setTimeout(function () {
+            btn.textContent = 'Copy error';
+            if (status) status.textContent = '';
+          }, 2000);
+        });
+      });
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', setupCopyButton);
+    } else {
+      setupCopyButton();
+    }
+  })();
+</script>
