@@ -1,4 +1,4 @@
-import type { ComponentProps, FC, MutableRefObject } from 'react';
+import type { ComponentProps, FC, MutableRefObject, SyntheticEvent } from 'react';
 import React, { useCallback, useMemo, useRef } from 'react';
 
 import { Button, ListItem } from 'storybook/internal/components';
@@ -70,6 +70,7 @@ const CollapseButton = styled(Button)(({ theme }) => ({
   textTransform: 'uppercase',
   color: theme.textMutedColor,
   padding: '0 8px',
+  flex: 1,
 }));
 
 export const LeafNodeStyleWrapper = styled.div(({ theme }) => ({
@@ -158,6 +159,8 @@ interface NodeProps {
   isExpanded: boolean;
   setExpanded: (action: ExpandAction) => void;
   setFullyExpanded?: () => void;
+  setExpandAll?: () => void;
+  setCollapseAll?: () => void;
   onSelectStoryId: (itemId: string) => void;
   statuses: StatusByTypeId;
   groupStatus: Record<StoryId, StatusValue>;
@@ -219,6 +222,8 @@ const Node = React.memo<NodeProps>(function Node(props) {
     setFullyExpanded,
     isExpanded,
     setExpanded,
+    setExpandAll,
+    setCollapseAll,
     onSelectStoryId,
     api,
   } = props;
@@ -247,8 +252,31 @@ const Node = React.memo<NodeProps>(function Node(props) {
         }));
     }
 
+    if (item.type === 'root') {
+      return [
+        {
+          id: 'expand-all',
+          title: 'Expand all',
+          icon: <ExpandAltIcon />,
+          onClick: (e: SyntheticEvent) => {
+            e.preventDefault();
+            setExpandAll?.();
+          },
+        },
+        {
+          id: 'collapse-all',
+          title: 'Collapse all',
+          icon: <CollapseIconSvg />,
+          onClick: (e: SyntheticEvent) => {
+            e.preventDefault();
+            setCollapseAll?.();
+          },
+        },
+      ];
+    }
+
     return [];
-  }, [item.id, item.type, onSelectStoryId, statuses]);
+  }, [item.id, item.type, onSelectStoryId, statuses, setExpandAll, setCollapseAll]);
 
   const id = createId(item.id, refId);
   const contextMenu =
@@ -330,6 +358,7 @@ const Node = React.memo<NodeProps>(function Node(props) {
         data-ref-id={refId}
         data-item-id={item.id}
         data-nodetype="root"
+        onMouseEnter={contextMenu.onMouseEnter}
       >
         <CollapseButton
           variant="ghost"
@@ -344,23 +373,7 @@ const Node = React.memo<NodeProps>(function Node(props) {
           <CollapseIcon isExpanded={isExpanded} />
           {item.renderLabel?.(item, api) || item.name}
         </CollapseButton>
-        {isExpanded && (
-          <Button
-            padding="small"
-            variant="ghost"
-            className="sidebar-subheading-action"
-            ariaLabel={isFullyExpanded ? 'Collapse all' : 'Expand all'}
-            data-action="expand-all"
-            data-expanded={isFullyExpanded}
-            onClick={(event) => {
-              event.preventDefault();
-              // @ts-expect-error (non strict)
-              setFullyExpanded();
-            }}
-          >
-            {isFullyExpanded ? <CollapseIconSvg /> : <ExpandAltIcon />}
-          </Button>
-        )}
+        {contextMenu.node}
       </RootNode>
     );
   }
@@ -520,12 +533,22 @@ const Root = React.memo<NodeProps & { expandableDescendants: string[] }>(functio
     () => setExpanded({ ids: expandableDescendants, value: !isFullyExpanded }),
     [setExpanded, isFullyExpanded, expandableDescendants]
   );
+  const setExpandAll = useCallback(
+    () => setExpanded({ ids: expandableDescendants, value: true }),
+    [setExpanded, expandableDescendants]
+  );
+  const setCollapseAll = useCallback(
+    () => setExpanded({ ids: expandableDescendants, value: false }),
+    [setExpanded, expandableDescendants]
+  );
   return (
     <Node
       {...props}
       setExpanded={setExpanded}
       isFullyExpanded={isFullyExpanded}
       setFullyExpanded={setFullyExpanded}
+      setExpandAll={setExpandAll}
+      setCollapseAll={setCollapseAll}
     />
   );
 });
