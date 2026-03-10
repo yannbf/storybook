@@ -85,6 +85,14 @@ export const RootNode = styled.div({
   '&:first-of-type': {
     marginTop: 0,
   },
+
+  '& [data-displayed="off"]': {
+    visibility: 'hidden',
+  },
+
+  '&:hover [data-displayed="off"]': {
+    visibility: 'visible',
+  },
 });
 
 const Wrapper = styled.div({

@@ -41,7 +41,13 @@ const FloatingStatusButton = styled(StatusButton)({
   },
 });
 
-export const useContextMenu = (context: API_HashEntry, links: Link[], api: API) => {
+const InlineStatusButton = styled(StatusButton)({
+  '&:focus-visible': {
+    outlineOffset: -2,
+  },
+});
+
+export const useContextMenu = (context: API_HashEntry, links: Link[], api: API, inline = false) => {
   const [hoverCount, setHoverCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [copyText, setCopyText] = React.useState('Copy story name');
@@ -192,6 +198,8 @@ export const useContextMenu = (context: API_HashEntry, links: Link[], api: API) 
       return empty;
     }
 
+    const ContextMenuButton = inline ? InlineStatusButton : FloatingStatusButton;
+
     return {
       onMouseEnter: handlers.onMouseEnter,
       node: shouldRender ? (
@@ -205,20 +213,20 @@ export const useContextMenu = (context: API_HashEntry, links: Link[], api: API) 
           hasChrome={true}
           padding={0}
         >
-          <FloatingStatusButton
+          <ContextMenuButton
             data-displayed={isOpen ? 'on' : 'off'}
             data-testid="context-menu"
-            ariaLabel="Open context menu"
+            ariaLabel="More actions"
             type="button"
             status={itemStatus}
             onClick={handlers.onOpen}
           >
             {MenuIcon}
-          </FloatingStatusButton>
+          </ContextMenuButton>
         </PopoverProvider>
       ) : null,
     };
-  }, [context, handlers, isOpen, shouldRender, links, topLinks, itemStatus, MenuIcon]);
+  }, [context, handlers, inline, isOpen, shouldRender, links, topLinks, itemStatus, MenuIcon]);
 };
 
 /**
