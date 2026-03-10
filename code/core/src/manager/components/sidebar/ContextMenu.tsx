@@ -47,7 +47,13 @@ const InlineStatusButton = styled(StatusButton)({
   },
 });
 
-export const useContextMenu = (context: API_HashEntry, links: Link[], api: API, inline = false) => {
+export const useContextMenu = (
+  context: API_HashEntry,
+  links: Link[],
+  api: API,
+  /** Set to true for root items to render as an inline button instead of a floating overlay */
+  inline = false
+) => {
   const [hoverCount, setHoverCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [copyText, setCopyText] = React.useState('Copy story name');

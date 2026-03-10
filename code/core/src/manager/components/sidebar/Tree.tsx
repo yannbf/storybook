@@ -283,10 +283,9 @@ const Node = React.memo<NodeProps>(function Node(props) {
   }, [item.id, item.type, onSelectStoryId, statuses, expandAll, collapseAll]);
 
   const id = createId(item.id, refId);
-  const isRootItem = item.type === 'root';
   const contextMenu =
     refId === 'storybook_internal'
-      ? useContextMenu(item, statusLinks, api, isRootItem)
+      ? useContextMenu(item, statusLinks, api, item.type === 'root')
       : { node: null, onMouseEnter: () => {} };
 
   if (
