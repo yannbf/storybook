@@ -146,7 +146,11 @@ Post a comment with this format (adapt based on determined flow):
 1. Read `CLAUDE.md` at repository root
 2. Follow `.claude/skills/fix-bug/SKILL.md` — complete end-to-end workflow
 3. Execute all steps in order, including verification for Flow [X]
-4. All PR requirements (token usage, timing, process notes) are documented in the skill files
+4. When creating the PR:
+   - Apply labels: `agent`, `bug`, `ci:normal`
+   - Post a comment with the same content as the PR body
+   - Include token/time breakdowns in AI disclaimer
+5. All detailed requirements are in the skill files
 
 **Special Considerations**: [Any warnings, edge cases, or important notes]
 

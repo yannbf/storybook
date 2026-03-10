@@ -20,7 +20,7 @@ Step 5: /open-pull-request [issue-number]
          ↓ [DONE: PR created with token usage + duration]
 ```
 
-⚠️ **IMPORTANT**: Before starting Step 1, record your start time and begin tracking token usage. You will need to report both in the PR's AI disclaimer section.
+⚠️ **IMPORTANT**: Before starting Step 1, record your start time and begin tracking token usage. Track time and tokens **per phase** (planning, implementation, testing, verification, PR prep) so you can provide detailed breakdowns in the PR's AI disclaimer section for optimization analysis.
 
 ---
 

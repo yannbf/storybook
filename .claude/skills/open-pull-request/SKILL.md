@@ -234,7 +234,7 @@ Example: "Initial test command failed because the correct path is `cd code && ya
 
 ### 2d: AI Disclaimer section
 
-⚠️ **REQUIRED**: Add an AI disclaimer explaining that the PR was created by AI, listing every skill invoked, token usage, and timing.
+⚠️ **REQUIRED**: Add an AI disclaimer explaining that the PR was created by AI, listing every skill invoked, token usage, timing, and detailed breakdowns.
 
 ```markdown
 ## AI Disclaimer
@@ -248,12 +248,35 @@ Example: "Initial test command failed because the correct path is `cd code && ya
   - `/verification-checklist`
   - `/<flow-specific-skill>` (e.g. `/renderer-bug-workflow`, `/builder-bug-workflow`, `/manager-bug-workflow` — omit if Flow 0)
   - `/open-pull-request`
-- **Token usage**: <total tokens consumed, e.g., "4.1M in, 22.5K out, 4.0M cached">
-- **Process duration**: <total time from start to PR, e.g., "13 minutes">
+- **Total token usage**: <total tokens consumed, e.g., "4.1M in, 22.5K out, 4.0M cached">
+- **Total duration**: <total time from start to PR, e.g., "13 minutes">
+
+### Task Breakdown (for optimization analysis)
+
+**Time breakdown**:
+- Planning & analysis: X min
+- Code implementation: X min
+- Testing & linting: X min
+- Verification (sandbox/screenshots): X min
+- PR preparation: X min
+
+**Token breakdown**:
+- Planning & analysis: X in, X out
+- Code implementation: X in, X out
+- Testing & linting: X in, X out
+- Verification: X in, X out
+- PR preparation: X in, X out
+
+**Highest consumers**:
+- Most time: <task name> (X min)
+- Most tokens: <task name> (X total)
+
+---
+
 - Human Oversight: <reviewed-by-human yes/no + notes>
 ```
 
-**Token usage and duration are REQUIRED fields** — track these throughout your workflow execution.
+**Token usage, duration, and breakdowns are REQUIRED fields** — track these throughout your workflow execution so you can provide accurate breakdowns by phase.
 
 ### 2e: Complete Your PR Description
 
@@ -286,23 +309,36 @@ If any box is unchecked, **do not proceed** — return to the appropriate verifi
 **Action**: Using whatever mechanism is available in your execution context:
 
 1. **Push the feature branch** (`agent/fix-issue-NNNN`) to the remote origin
+
 2. **Create a pull request** targeting the `next` branch with your prepared title and body
-3. **Apply labels** to the PR: `agent`, `bug`, `ci:normal`
+
+3. **⚠️ CRITICAL: Apply labels** to the PR — these three labels are REQUIRED:
    - `agent` — marks this as an AI-agent-created PR
    - `bug` — issue type
    - `ci:normal` — triggers the standard CI sandbox run (only valid once all verification evidence is complete)
 
-⚠️ **Label permissions**: If you cannot apply labels directly, leave a comment on the PR requesting them:
+   **Label application methods** (use whatever works in your environment):
+   - Via `gh` CLI: `gh pr edit <pr-number> --add-label agent,bug,ci:normal`
+   - Via GitHub API: Include labels in PR creation request
+   - Via your agent's native PR creation mechanism
 
-> Labels to apply: `agent`, `bug`, `ci:normal`
+   ⚠️ **If labels are not applied**: The PR is incomplete. If you cannot apply labels directly due to permissions, leave a comment requesting them:
+
+   > Labels to apply: `agent`, `bug`, `ci:normal`
+
+4. **Post a comment on the PR** with the same content as the PR body
+   - This ensures the PR content is visible in the timeline
+   - Use `gh pr comment <pr-number> --body-file <file>` or your agent's comment mechanism
+   - Comment should be identical to the PR description
 
 **Success Criteria**:
 
 - [ ] PR appears on GitHub.com
 - [ ] Title matches your prepared title
 - [ ] Body matches your prepared description
-- [ ] Labels applied (or comment left requesting them if permissions denied)
+- [ ] **Labels applied: `agent`, `bug`, `ci:normal`** (critical - verify this!)
 - [ ] Issue is linked via "Closes #NNNN"
+- [ ] PR comment posted with same content as PR body
 
 ---
 
