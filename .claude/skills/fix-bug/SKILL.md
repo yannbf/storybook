@@ -6,6 +6,8 @@ description: Complete end-to-end workflow to fetch a GitHub issue, understand th
 ## Workflow Overview
 
 ```
+Step 0: Record start time and initialize token tracking
+         ↓
 Step 1: /plan-bug-fix [issue-number]
          ↓ [MUST PASS: Plan complete, branch created]
 Step 2: /implement-and-verify-fix
@@ -15,8 +17,10 @@ Step 3: /verification-checklist
 Step 4: Documentation Self-Improvement (if needed)
          ↓
 Step 5: /open-pull-request [issue-number]
-         ↓ [DONE: PR created and ready for review]
+         ↓ [DONE: PR created with token usage + duration]
 ```
+
+⚠️ **IMPORTANT**: Before starting Step 1, record your start time and begin tracking token usage. You will need to report both in the PR's AI disclaimer section.
 
 ---
 
@@ -107,20 +111,36 @@ That skill confirms the fix addresses root cause, all tests pass, and no regress
 - [ ] Command examples failed or needed adjustments
 - [ ] Prerequisites were missing or incorrect
 
-**If YES to any**: FIX THE DOCUMENTATION NOW before opening the PR.
+**If YES to any**: FIX THE DOCUMENTATION NOW in a separate commit.
 
 **Action Steps**:
 
-1. Identify which file needs updating (CLAUDE.md or specific skill in `.claude/skills/`)
+1. Identify which file needs updating (CLAUDE.md, AGENTS.md, or specific skill in `.claude/skills/`)
 2. Make the fix directly in that file using edit tools
-3. Include in PR description: What was wrong? What did you fix? Why will this help next time?
+3. Create a **separate commit** for documentation improvements (do not mix with bug fix commit)
+4. Commit message format: `docs(skills): [brief description of improvement]`
 
-**Rationale**: Each bug fix workflow is an opportunity to improve the skills themselves. By fixing documentation issues immediately, the next agent run will perform better and avoid the same pitfalls.
+**What to Document** (Generic vs. Specific):
+
+✅ **DO document** (generic, reusable patterns):
+- Correct command syntax that failed first attempt (e.g., "Test command is `cd code && yarn test <file>`")
+- File paths or directory structures (e.g., "Sandbox location is `../storybook-sandboxes/<template>`")
+- Workflow patterns (e.g., "Always compile before testing: `yarn nx compile <package>`")
+- Common gotchas (e.g., "Playwright requires `--headed` flag in Actions environment")
+- Prerequisites or setup steps that were missing
+
+❌ **DO NOT document** (hyper-specific, not reusable):
+- Specific DOM selectors for one test (e.g., `.story-123 > div[data-test]`)
+- Bug-specific details (e.g., "Issue #456 required changing line 89")
+- One-off edge cases that won't recur
+
+**Rationale**: Each bug fix workflow is an opportunity to improve the skills themselves. By fixing documentation issues immediately with generic, broadly applicable information, the next agent run will perform better and avoid the same pitfalls.
 
 **Success Criteria**:
 
 - [ ] All documentation issues identified during workflow execution are fixed (or none found)
-- [ ] Documentation improvements committed to feature branch (if any)
+- [ ] Documentation improvements committed separately from bug fix (if any)
+- [ ] Only generic, reusable information was added (no hyper-specific details)
 - [ ] Ready to proceed with PR preparation
 
 ---

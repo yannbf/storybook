@@ -144,10 +144,9 @@ Post a comment with this format (adapt based on determined flow):
 
 **Instructions for @copilot**:
 1. Read `CLAUDE.md` at repository root
-2. Follow `.claude/skills/fix-bug/SKILL.md` — complete workflow entry point
-3. The planning phase will direct you to `.claude/skills/[specific-flow-workflow]/SKILL.md`
-4. Execute all verification steps for Flow [X]
-5. Do not open PR until verification is complete
+2. Follow `.claude/skills/fix-bug/SKILL.md` — complete end-to-end workflow
+3. Execute all steps in order, including verification for Flow [X]
+4. All PR requirements (token usage, timing, process notes) are documented in the skill files
 
 **Special Considerations**: [Any warnings, edge cases, or important notes]
 

@@ -209,9 +209,32 @@ Terminal output now matches expected format without build-specific noise.
 <!-- Upload screenshot here showing the correct Manager UI behavior -->
 ```
 
-### 2c: AI Disclaimer section
+### 2c: Process Notes section (if applicable)
 
-Add an AI disclaimer explaining that the PR was created by AI, listing every skill that was invoked during the workflow and cost and usage breakdown.
+**ONLY include this section if you encountered difficulties during the workflow.**
+
+If you got stuck, took multiple attempts, struggled with commands/paths, or had to debug issues:
+
+```markdown
+## Process Notes
+
+[1-3 concise sentences explaining what was challenging]
+
+Example: "Initial test command failed because the correct path is `cd code && yarn test`. Updated skill documentation to include this."
+
+**Skill improvements**: See commit [hash] for documentation updates to prevent this issue in future runs.
+```
+
+**Requirements**:
+- Be concise (1-3 sentences max)
+- Only mention challenges that were non-obvious or time-consuming
+- If you updated skill files, reference the commit hash
+
+**If the workflow was smooth with no issues**: Omit this section entirely.
+
+### 2d: AI Disclaimer section
+
+⚠️ **REQUIRED**: Add an AI disclaimer explaining that the PR was created by AI, listing every skill invoked, token usage, and timing.
 
 ```markdown
 ## AI Disclaimer
@@ -225,17 +248,16 @@ Add an AI disclaimer explaining that the PR was created by AI, listing every ski
   - `/verification-checklist`
   - `/<flow-specific-skill>` (e.g. `/renderer-bug-workflow`, `/builder-bug-workflow`, `/manager-bug-workflow` — omit if Flow 0)
   - `/open-pull-request`
-- Usage breakdown:
-  - Total usage est:        1 Premium request
-  - API time spent:         7m 12s
-  - Total session time:     13m 18s
-  - Token usage: 4.1m in, 22.5k out, 4.0m cached
+- **Token usage**: <total tokens consumed, e.g., "4.1M in, 22.5K out, 4.0M cached">
+- **Process duration**: <total time from start to PR, e.g., "13 minutes">
 - Human Oversight: <reviewed-by-human yes/no + notes>
 ```
 
-### 2d: Complete Your PR Description
+**Token usage and duration are REQUIRED fields** — track these throughout your workflow execution.
 
-Combine the base template (Section 2a) with your flow-specific section (Section 2b) and add the AI disclaimer (Section 2c) at the end. Ensure all placeholder text (issue number, evidence, story paths, screenshots) is fully populated — no `[placeholder]` text should remain.
+### 2e: Complete Your PR Description
+
+Combine the base template (Section 2a) with your flow-specific section (Section 2b), optionally add Process Notes (Section 2c) if there were difficulties, and add the AI disclaimer (Section 2d) at the end. Ensure all placeholder text (issue number, evidence, story paths, screenshots) is fully populated — no `[placeholder]` text should remain.
 
 **Success Criteria**:
 
