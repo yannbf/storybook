@@ -75,17 +75,31 @@ const BranchNode = styled.button<{
 
 const LeafNode = styled.a<{ depth?: number }>(commonNodeStyles);
 
-export const RootNode = styled.div({
+export const RootNode = styled.div(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
   marginTop: 16,
   marginBottom: 4,
+  position: 'relative',
+  '--tree-node-background-hover': 'transparent',
 
   '&:first-of-type': {
     marginTop: 0,
   },
-});
+
+  '&:hover': {
+    '--tree-node-background-hover': theme.background.hoverable,
+  },
+
+  '& [data-displayed="off"]': {
+    visibility: 'hidden',
+  },
+
+  '&:hover [data-displayed="off"]': {
+    visibility: 'visible',
+  },
+}));
 
 const Wrapper = styled.div({
   display: 'flex',
