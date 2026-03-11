@@ -109,6 +109,16 @@ ELSE (bug is purely about logic, build output, or CLI with NO user-visible UI in
 
 **Action**: Document the fix before writing code.
 
+**⚠️ Important — Explore before planning**: Before filling out the plan, spend time understanding the relevant code. For sidebar/Manager UI issues especially:
+
+1. **Find the existing pattern first** — If the issue asks to add new behavior to a component, find where the SAME behavior is implemented for a similar component (e.g., if stories have "Run tests" in the context menu, search for where that's added before adding it to root items).
+   ```bash
+   # Example: find where "run tests" context menu item is registered
+   grep -rn "sidebarContextMenu" code/ --include="*.tsx" --include="*.ts" | grep -v "node_modules"
+   ```
+2. **Trace the data flow** — For UI changes, trace from the visible element back to its source: What renders it? What data drives it? What hook/event triggers the action?
+3. **Check for feature flags or type guards** — Many Storybook features are gated by `item.type === 'story'` or similar checks. A feature request to "add X for root" often means finding such a guard and extending it.
+
 **Plan Format** (write this down):
 
 ```
@@ -151,6 +161,7 @@ Evidence: [screenshot / snapshot / E2E result]
 - [ ] You can point to exact code that's broken
 - [ ] You know which tests to run
 - [ ] You know which verification flow applies
+- [ ] For UI features: you've found the existing pattern for similar behavior and understand the data flow
 
 **Checkpoint**: Review plan for completeness. If ANY part is unclear, research more before proceeding.
 

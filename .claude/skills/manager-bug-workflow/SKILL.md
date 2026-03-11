@@ -11,6 +11,44 @@ This workflow also covers **canvas/preview-web UI bugs** — fixes in `preview-a
 
 ---
 
+## Sidebar Architecture Reference
+
+Before working on sidebar issues, understand these key architectural patterns:
+
+### Sidebar context menu (the `⋯` popover on hover)
+
+The sidebar context menu is composed of two layers:
+
+1. **`useContextMenu` in `ContextMenu.tsx`** — assembles the popover button and the `TooltipLinkList`. It receives a `links` array (from `statusLinks` in `Tree.tsx`) and merges them with `topLinks` (built-in links: "Open in editor", "Copy story name") and addon-contributed content.
+
+2. **Addon-contributed menu content** — Addons register a `sidebarContextMenu` function via `addons.add(...)`. This function receives `{ context: API_HashEntry }` (the current sidebar item) and returns a `ReactNode`. It is rendered inside the `LiveContextMenu` component:
+   ```tsx
+   // ContextMenu.tsx
+   const content = state.sidebarContextMenu?.({ context });
+   ```
+   The vitest addon registers this in `code/addons/vitest/src/manager.tsx`. It currently shows for all item types **except** `docs` and non-test `story` items.
+
+3. **`statusLinks` in `Tree.tsx`** — A `useMemo` that produces `Link[]` items from test-provider status for story/docs items. These become individual rows in the `TooltipLinkList`.
+
+### Key file map
+
+| File | Purpose |
+|---|---|
+| `code/core/src/manager/components/sidebar/Tree.tsx` | Main sidebar tree renderer, `statusLinks`, `useContextMenu` call, `RootNode`/`Node` render |
+| `code/core/src/manager/components/sidebar/ContextMenu.tsx` | `useContextMenu` hook, `LiveContextMenu`, assembles menu |
+| `code/core/src/manager/components/sidebar/TreeNode.tsx` | Styled components for `RootNode`, `BranchNode`, `LeafNode` |
+| `code/addons/vitest/src/manager.tsx` | Registers `sidebarContextMenu` function for vitest |
+| `code/addons/vitest/src/components/SidebarContextMenu.tsx` | The "Run tests" button rendered in the context menu |
+
+### How "Run tests" appears in the sidebar context menu
+
+The "Run tests" button is rendered by the vitest addon's `SidebarContextMenu` component, which is registered via `sidebarContextMenu`. It currently returns null for `docs` and non-test stories, but renders for **groups, components, and root items** (all other types). So:
+
+- If an issue asks to "add run tests at the root level", the vitest addon side **may already handle it** — the key change needed is to ensure the sidebar's `Tree.tsx` **shows the context menu popover button on root nodes** (via `onMouseEnter` and `contextMenu.node`).
+- Always check whether the vitest addon's `sidebarContextMenu` filter needs to be updated too.
+
+---
+
 ## Step 1: Decide Whether You Need a New Story
 
 E2E tests run against the **internal Storybook UI** served from `code/` on port 6006. Before writing a test, check if an existing story already demonstrates the affected behavior:

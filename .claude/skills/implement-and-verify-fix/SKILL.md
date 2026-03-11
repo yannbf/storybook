@@ -205,4 +205,27 @@ IF verification fails:
 
 ---
 
+## Incremental Progress and Emergency Commits
+
+⚠️ **IMPORTANT**: If you encounter a tool error, session timeout, or unrecoverable failure at any point:
+
+1. **Stage and commit all changed files immediately** — use a commit message that is descriptive and includes the actual error:
+   ```
+   WIP: Partial progress on #[issue-number] — stopped at [step name]
+
+   Error encountered: [paste the actual error message or describe it]
+   Next step needed: [what still needs to be done]
+
+   Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+   ```
+
+2. **Do NOT use vague messages** like "Changes before error encountered" — they make it impossible for a human to resume your work.
+
+3. **Commit after each major milestone**, not only at the end:
+   - After Step 1 (implementation complete) → commit
+   - After Step 2 (tests passing) → commit
+   - After Step 5 (verification complete) → commit
+
+---
+
 ✅ **COMPLETE** — Code implemented, tests passing, verification evidence committed. Ready for `/verification-checklist`.
