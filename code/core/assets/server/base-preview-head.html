@@ -124,6 +124,8 @@
   }
 
   .sb-errordisplay {
+    --sb-errordisplay-accent: #ff4400;
+
     background: #f6f9fc;
     color: black;
     z-index: 999999;
@@ -144,7 +146,7 @@
     border-radius: 6px;
     background: white;
     color: black;
-    border: 1px solid #ff4400;
+    border: 1px solid var(--sb-errordisplay-accent);
     box-shadow: 0 0 64px rgba(0, 0, 0, 0.1);
     gap: 16px;
 
@@ -171,7 +173,7 @@
         display: inline-block;
         width: 12px;
         height: 12px;
-        background: #ff4400;
+        background: var(--sb-errordisplay-accent);
         border-radius: 50%;
         margin-right: 8px;
         flex-shrink: 0;
@@ -204,7 +206,7 @@
       line-height: 20px;
       color: #444;
       background: #fff8f6;
-      border-left: 3px solid #ff4400;
+      border-left: 3px solid var(--sb-errordisplay-accent);
       padding: 8px 12px;
       margin: 0;
       border-radius: 0 4px 4px 0;

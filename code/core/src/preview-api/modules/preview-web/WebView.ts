@@ -50,6 +50,8 @@ export class WebView implements View<HTMLElement> {
 
   private preparingTimeout?: ReturnType<typeof setTimeout>;
 
+  private copyClickHandler?: (event: Event) => void;
+
   constructor() {
     // Special code for testing situations
     if (typeof document !== 'undefined') {
@@ -71,7 +73,7 @@ export class WebView implements View<HTMLElement> {
 
     // Attach copy-to-clipboard handler for the error display
     if (typeof document !== 'undefined') {
-      document.addEventListener('click', (event) => {
+      this.copyClickHandler = (event) => {
         const target = event.target as Element;
         if (target?.id === 'error-copy-btn' || target?.closest('#error-copy-btn')) {
           const messageEl = document.getElementById('error-message');
@@ -89,7 +91,8 @@ export class WebView implements View<HTMLElement> {
             }, 2000);
           }
         }
-      });
+      };
+      document.addEventListener('click', this.copyClickHandler);
     }
   }
 
@@ -189,8 +192,15 @@ export class WebView implements View<HTMLElement> {
     }
 
     if (guidance?.instructions?.length && guidanceEl) {
-      const listHTML = `<ol>${guidance.instructions.map((instruction) => `<li>${instruction}</li>`).join('')}</ol>`;
-      guidanceEl.innerHTML = listHTML;
+      // Use DOM methods to safely render text content (avoids XSS and HTML-parsing issues
+      // with instruction strings that may contain angle brackets in code examples)
+      const ol = document.createElement('ol');
+      for (const instruction of guidance.instructions) {
+        const li = document.createElement('li');
+        li.textContent = instruction;
+        ol.appendChild(li);
+      }
+      guidanceEl.replaceChildren(ol);
       guidanceEl.hidden = false;
     } else if (guidanceEl) {
       guidanceEl.hidden = true;
