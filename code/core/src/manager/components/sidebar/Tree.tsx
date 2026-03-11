@@ -159,8 +159,8 @@ interface NodeProps {
   isExpanded: boolean;
   setExpanded: (action: ExpandAction) => void;
   setFullyExpanded?: () => void;
-  setExpandAll?: () => void;
-  setCollapseAll?: () => void;
+  expandAll?: () => void;
+  collapseAll?: () => void;
   onSelectStoryId: (itemId: string) => void;
   statuses: StatusByTypeId;
   groupStatus: Record<StoryId, StatusValue>;
@@ -218,8 +218,8 @@ const Node = React.memo<NodeProps>(function Node(props) {
     isOrphan,
     isDisplayed,
     isSelected,
-    setExpandAll,
-    setCollapseAll,
+    expandAll,
+    collapseAll,
     isExpanded,
     setExpanded,
     onSelectStoryId,
@@ -263,7 +263,7 @@ const Node = React.memo<NodeProps>(function Node(props) {
         title: 'Expand all',
         icon: <ExpandAltIcon />,
         onClick: () => {
-          setExpandAll?.();
+          expandAll?.();
         },
       },
       {
@@ -271,16 +271,16 @@ const Node = React.memo<NodeProps>(function Node(props) {
         title: 'Collapse all',
         icon: <CollapseIconSvg />,
         onClick: () => {
-          setCollapseAll?.();
+          collapseAll?.();
         },
       },
     ];
-  }, [item.type, setExpandAll, setCollapseAll]);
+  }, [item.type, expandAll, collapseAll]);
 
   const id = createId(item.id, refId);
   const contextMenu =
     refId === 'storybook_internal'
-      ? useContextMenu(item, item.type === 'root' ? rootLinks : statusLinks, api)
+      ? useContextMenu(item, [...rootLinks, ...statusLinks], api)
       : { node: null, onMouseEnter: () => {} };
 
   if (
@@ -532,11 +532,11 @@ const Root = React.memo<NodeProps & { expandableDescendants: string[] }>(functio
     () => setExpanded({ ids: expandableDescendants, value: !isFullyExpanded }),
     [setExpanded, isFullyExpanded, expandableDescendants]
   );
-  const setExpandAll = useCallback(
+  const expandAll = useCallback(
     () => setExpanded({ ids: expandableDescendants, value: true }),
     [setExpanded, expandableDescendants]
   );
-  const setCollapseAll = useCallback(
+  const collapseAll = useCallback(
     () => setExpanded({ ids: expandableDescendants, value: false }),
     [setExpanded, expandableDescendants]
   );
@@ -546,8 +546,8 @@ const Root = React.memo<NodeProps & { expandableDescendants: string[] }>(functio
       setExpanded={setExpanded}
       isFullyExpanded={isFullyExpanded}
       setFullyExpanded={setFullyExpanded}
-      setExpandAll={setExpandAll}
-      setCollapseAll={setCollapseAll}
+      expandAll={expandAll}
+      collapseAll={collapseAll}
     />
   );
 });
