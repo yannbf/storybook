@@ -7,6 +7,10 @@ import AnsiToHtml from 'ansi-to-html';
 import { parse } from 'picoquery';
 import { dedent } from 'ts-dedent';
 
+import {
+  categorizeError,
+  getCategoryGuidance,
+} from '../../../shared/utils/categorize-render-errors';
 import type { View } from './View';
 
 const { document } = global;
@@ -63,6 +67,29 @@ export class WebView implements View<HTMLElement> {
         }
         default: // pass;
       }
+    }
+
+    // Attach copy-to-clipboard handler for the error display
+    if (typeof document !== 'undefined') {
+      document.addEventListener('click', (event) => {
+        const target = event.target as Element;
+        if (target?.id === 'error-copy-btn' || target?.closest('#error-copy-btn')) {
+          const messageEl = document.getElementById('error-message');
+          const stackEl = document.getElementById('error-stack');
+          const text = [messageEl?.textContent, stackEl?.textContent].filter(Boolean).join('\n\n');
+          navigator.clipboard?.writeText(text).catch(() => {
+            // Fallback: silently fail if clipboard API is not available
+          });
+          const btn = document.getElementById('error-copy-btn');
+          if (btn) {
+            const originalText = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => {
+              btn.textContent = originalText;
+            }, 2000);
+          }
+        }
+      });
     }
   }
 
@@ -145,6 +172,36 @@ export class WebView implements View<HTMLElement> {
 
     document.getElementById('error-message')!.innerHTML = ansiConverter.toHtml(header);
     document.getElementById('error-stack')!.innerHTML = ansiConverter.toHtml(detail);
+
+    // Use error categorization to show relevant guidance
+    const { category } = categorizeError(message, stack);
+    const guidance = getCategoryGuidance(category);
+
+    const descriptionEl = document.getElementById('error-description');
+    const guidanceEl = document.getElementById('error-guidance');
+    const docsLinkEl = document.getElementById('error-docs-link') as HTMLAnchorElement | null;
+
+    if (guidance && descriptionEl) {
+      descriptionEl.textContent = guidance.description;
+      descriptionEl.hidden = false;
+    } else if (descriptionEl) {
+      descriptionEl.hidden = true;
+    }
+
+    if (guidance?.instructions?.length && guidanceEl) {
+      const listHTML = `<ol>${guidance.instructions.map((instruction) => `<li>${instruction}</li>`).join('')}</ol>`;
+      guidanceEl.innerHTML = listHTML;
+      guidanceEl.hidden = false;
+    } else if (guidanceEl) {
+      guidanceEl.hidden = true;
+    }
+
+    if (guidance?.docsLink && docsLinkEl) {
+      docsLinkEl.href = guidance.docsLink;
+      docsLinkEl.hidden = false;
+    } else if (docsLinkEl) {
+      docsLinkEl.hidden = true;
+    }
 
     this.showMode(Mode.ERROR);
   }

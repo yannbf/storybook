@@ -231,6 +231,147 @@ function getMatchedDependencies(category: ErrorCategory, ctx: ErrorContext): str
   }
 }
 
+export interface CategoryGuidance {
+  /** Short description of what caused the error */
+  description: string;
+  /** Actionable instructions to resolve the error */
+  instructions: string[];
+  /** Link to relevant Storybook documentation */
+  docsLink?: string;
+}
+
+/**
+ * For a given error category, return actionable guidance including a description, step-by-step
+ * instructions, and an optional link to relevant documentation. Returns null for unknown errors
+ * where no specific guidance is available.
+ */
+export function getCategoryGuidance(category: ErrorCategory): CategoryGuidance | null {
+  switch (category) {
+    case ERROR_CATEGORIES.MISSING_STATE_PROVIDER:
+      return {
+        description: getCategoryDescription(category),
+        instructions: [
+          'Wrap your component with the required state management provider using a decorator in your story or in preview.js.',
+          'For example: `decorators: [(Story) => <Provider store={store}><Story /></Provider>]`',
+        ],
+        docsLink: 'https://storybook.js.org/docs/writing-stories/decorators',
+      };
+
+    case ERROR_CATEGORIES.MISSING_ROUTER_PROVIDER:
+      return {
+        description: getCategoryDescription(category),
+        instructions: [
+          'Wrap your component with a Router provider using a decorator in your story or in preview.js.',
+          'For example: `decorators: [(Story) => <MemoryRouter><Story /></MemoryRouter>]`',
+        ],
+        docsLink: 'https://storybook.js.org/docs/writing-stories/decorators',
+      };
+
+    case ERROR_CATEGORIES.MISSING_THEME_PROVIDER:
+      return {
+        description: getCategoryDescription(category),
+        instructions: [
+          'Wrap your component with a ThemeProvider using a decorator in your story or in preview.js.',
+          'For example: `decorators: [(Story) => <ThemeProvider theme={theme}><Story /></ThemeProvider>]`',
+        ],
+        docsLink: 'https://storybook.js.org/docs/writing-stories/decorators',
+      };
+
+    case ERROR_CATEGORIES.MISSING_TRANSLATION_PROVIDER:
+      return {
+        description: getCategoryDescription(category),
+        instructions: [
+          'Wrap your component with the required i18n provider using a decorator in your story or in preview.js.',
+          'For example: `decorators: [(Story) => <I18nextProvider i18n={i18n}><Story /></I18nextProvider>]`',
+        ],
+        docsLink: 'https://storybook.js.org/docs/writing-stories/decorators',
+      };
+
+    case ERROR_CATEGORIES.MISSING_PROVIDER:
+      return {
+        description: getCategoryDescription(category),
+        instructions: [
+          'Wrap your component with the required context provider using a decorator in your story or in preview.js.',
+          'For example: `decorators: [(Story) => <MyContext.Provider value={...}><Story /></MyContext.Provider>]`',
+        ],
+        docsLink: 'https://storybook.js.org/docs/writing-stories/decorators',
+      };
+
+    case ERROR_CATEGORIES.MISSING_PORTAL_ROOT:
+      return {
+        description: getCategoryDescription(category),
+        instructions: [
+          'Ensure a DOM element for the portal exists in the preview. You can add it via a decorator or in preview-head.html.',
+          'For example: `decorators: [(Story) => <><Story /><div id="portal-root" /></>]`',
+        ],
+        docsLink: 'https://storybook.js.org/docs/writing-stories/decorators',
+      };
+
+    case ERROR_CATEGORIES.HOOK_USAGE_ERROR:
+      return {
+        description: getCategoryDescription(category),
+        instructions: [
+          'Ensure hooks are only called at the top level of a React function component, not inside loops, conditions, or nested functions.',
+          'Check that you are not calling hooks from non-React functions.',
+        ],
+        docsLink: 'https://react.dev/reference/rules/rules-of-hooks',
+      };
+
+    case ERROR_CATEGORIES.MODULE_IMPORT_ERROR:
+      return {
+        description: getCategoryDescription(category),
+        instructions: [
+          'Verify the package is installed by running your package manager install command.',
+          'Check that your Webpack or Vite configuration includes the correct module aliases or resolvers.',
+        ],
+        docsLink: 'https://storybook.js.org/docs/configure/integration/compilers',
+      };
+
+    case ERROR_CATEGORIES.DYNAMIC_MODULE_IMPORT_ERROR:
+      return {
+        description: getCategoryDescription(category),
+        instructions: [
+          'Verify the dynamically imported module exists and is accessible at the given path.',
+          'Check that your bundler configuration supports dynamic imports.',
+        ],
+        docsLink: 'https://storybook.js.org/docs/builders/vite',
+      };
+
+    case ERROR_CATEGORIES.SERVER_COMPONENTS_ERROR:
+      return {
+        description: getCategoryDescription(category),
+        instructions: [
+          "Add the 'use client' directive at the top of the component file or its dependencies.",
+          'Storybook renders components in the browser. Server components must be wrapped or replaced with client-side equivalents.',
+        ],
+        docsLink: 'https://storybook.js.org/docs/get-started/frameworks/nextjs',
+      };
+
+    case ERROR_CATEGORIES.COMPONENT_RENDER_ERROR:
+      return {
+        description: getCategoryDescription(category),
+        instructions: [
+          'Check for undefined or null values being accessed in your component.',
+          'Verify that all required props are provided in your story args.',
+        ],
+        docsLink: 'https://storybook.js.org/docs/writing-stories',
+      };
+
+    case ERROR_CATEGORIES.TEST_FILE_IMPORT_ERROR:
+      return {
+        description: getCategoryDescription(category),
+        instructions: [
+          'Verify the test file path is correct and the file exists.',
+          'Check that your test setup file is properly configured in your Storybook or Vitest config.',
+        ],
+        docsLink: 'https://storybook.js.org/docs/writing-tests/test-addon',
+      };
+
+    default:
+      return null;
+  }
+}
+
 /** For a given category, return a description of the error for better legibility. */
 export function getCategoryDescription(category: ErrorCategory): string {
   switch (category) {

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ERROR_CATEGORIES, categorizeError } from './categorize-render-errors';
+import { ERROR_CATEGORIES, categorizeError, getCategoryGuidance } from './categorize-render-errors';
 
 describe('categorize-render-errors', () => {
   beforeEach(() => {
@@ -271,6 +271,50 @@ describe('categorize-render-errors', () => {
 
         expect(result.matchedDependencies).toEqual(['styled-components', '@emotion/react']);
       });
+    });
+  });
+
+  describe('getCategoryGuidance', () => {
+    it('should return null for UNKNOWN_ERROR', () => {
+      expect(getCategoryGuidance(ERROR_CATEGORIES.UNKNOWN_ERROR)).toBeNull();
+    });
+
+    it('should return guidance with description, instructions and docsLink for known categories', () => {
+      const guidance = getCategoryGuidance(ERROR_CATEGORIES.MISSING_PROVIDER);
+
+      expect(guidance).not.toBeNull();
+      expect(guidance?.description).toBeTruthy();
+      expect(guidance?.instructions).toBeInstanceOf(Array);
+      expect(guidance?.instructions.length).toBeGreaterThan(0);
+      expect(guidance?.docsLink).toMatch(/^https:\/\//);
+    });
+
+    it('should return guidance for all non-unknown categories', () => {
+      const knownCategories = Object.values(ERROR_CATEGORIES).filter(
+        (cat) => cat !== ERROR_CATEGORIES.UNKNOWN_ERROR
+      );
+
+      for (const category of knownCategories) {
+        const guidance = getCategoryGuidance(category);
+        expect(guidance, `Expected guidance for category: ${category}`).not.toBeNull();
+        expect(guidance?.instructions.length).toBeGreaterThan(0);
+      }
+    });
+
+    it('should return decorator docs link for provider-related errors', () => {
+      const providerCategories = [
+        ERROR_CATEGORIES.MISSING_PROVIDER,
+        ERROR_CATEGORIES.MISSING_STATE_PROVIDER,
+        ERROR_CATEGORIES.MISSING_ROUTER_PROVIDER,
+        ERROR_CATEGORIES.MISSING_THEME_PROVIDER,
+        ERROR_CATEGORIES.MISSING_TRANSLATION_PROVIDER,
+        ERROR_CATEGORIES.MISSING_PORTAL_ROOT,
+      ];
+
+      for (const category of providerCategories) {
+        const guidance = getCategoryGuidance(category);
+        expect(guidance?.docsLink).toBe('https://storybook.js.org/docs/writing-stories/decorators');
+      }
     });
   });
 });
