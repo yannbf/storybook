@@ -1,95 +1,206 @@
-@CLAUDE.md
+# GitHub Copilot Instructions for Storybook
 
-## GitHub Agentic Workflows (gh-aw)
+## Repository Structure
 
-This repository uses [GitHub Agentic Workflows](https://github.github.com/gh-aw/) for automated issue management, CI monitoring, and agentic code fixing. All workflow files live in `.github/agentic-workflows/`.
+```text
+storybook/                        # Yarn monorepo root
+├── .github/                      # GitHub configurations and workflows
+├── .nx/                          # NX workflows and configuration
+├── code/                         # Main codebase
+│   ├── .storybook/               # Configuration for internal UI Storybook
+│   ├── core/                     # Core Storybook package
+│   ├── lib/                      # Core supporting libraries
+│   ├── addons/                   # Core Storybook addons
+│   ├── builders/                 # Builder integrations
+│   ├── renderers/                # Renderer integrations
+│   ├── frameworks/               # Framework integrations
+│   ├── presets/                  # Preset packages for Webpack-based integrations
+│   └── sandbox/                  # Internal build artifacts (ignore)
+├── scripts/                      # Build and development scripts
+├── docs/                         # Documentation
+├── test-storybooks/              # Test repos
+└── ../storybook-sandboxes/       # Generated sandbox environments (outside repo)
+```
 
-gh-aw workflows use a security-first model: the agent job runs with **read-only permissions**. Any write operations (comments, labels, issue creation, Copilot assignment) are declared as `safe-outputs` in the workflow frontmatter and executed by a separate, permission-controlled job — the agent never holds write access.
+## Essential Commands
+
+### Compilation
+
+```bash
+yarn nx run-many -t compile
+yarn nx compile <package-name>
+```
+
+### Type Checking
+
+```bash
+yarn nx run-many -t check -c production
+```
+
+### Development Server
+
+```bash
+cd code && yarn storybook:ui        # http://localhost:6006/
+cd code && yarn storybook:ui:build  # Build for production
+```
+
+### Testing
+
+```bash
+cd code && yarn test
+cd code && yarn test:watch
+cd code && yarn storybook:vitest
+```
+
+## Commands to Avoid
+
+- **DO NOT RUN**: `yarn task dev` or `yarn start` (runs indefinitely)
+
+## Sandbox Location
+
+Generated at `../storybook-sandboxes/` outside repo
+
+## Sandbox Environments
+
+```bash
+yarn nx sandbox <template> -c production  # Creates ../storybook-sandboxes/<template>/
+```
+
+## Troubleshooting
+
+- Storybook logs available in generated sandbox directories
+- Use `--debug` flag with CLI commands for verbose output
+
+## Code Quality & Testing
+
+Format and lint before committing. Do not lint in-between, but only at the end:
+
+```bash
+yarn prettier --write <file>
+yarn --cwd code lint:js:cmd <file> --fix
+cd code && yarn test
+```
+
+**Testing:** Export tested functions, mock external dependencies, aim for 75%+ coverage, run `yarn vitest run --coverage <test-file>`
+
+**Logging:** Use `logger` from `storybook/internal/node-logger` (Node.js) or `storybook/internal/client-logger` (browser). Never use `console.log` directly.
 
 ---
 
-### Workflows
+## Verification Suite
 
-#### `issue-triage.md` — Auto-label new issues
+Every fix follows a **two-layer verification model**: a universal baseline (always runs) plus one or more scenario-specific escalations. Flows are not mutually exclusive — a single fix may require multiple flows. Use the issue description to determine which apply.
 
-**Trigger**: any new issue opened  
-**Safe outputs**: `add-labels` (max 2), `add-comment` (max 1)
+### Decision Tree
 
-Classifies the issue as `bug`, `enhancement`, `documentation`, `question`, `needs-reproduction`, `needs-info`, `good first issue`, `performance`, or `maintenance`. Posts a comment only if reproduction or specific info is missing.
+```
+Fix implemented
+    └── Flow 0: Universal — run unit tests + re-read problem
+            └── Ask: does this issue have a visual impact?
+                    ├── Yes → Visual evidence required
+                    │         ├── code/renderers/ changed       → Flow 1: Renderer Bug
+                    │         ├── code/builders/ changed        → Flow 2: Builder Frontend Bug
+                    │         └── code/core/src/manager/ or
+                    │             code/core/src/builder-manager/ changed → Flow 4: Manager Bug
+                    │
+                    └── Ask: does this issue affect Node.js terminal output?
+                              └── Yes → code/builders/ changed  → Flow 3: Builder Terminal Output Bug
+                                                                        └── PR opened with evidence attached
+```
 
----
-
-#### `ci-flake-detector.md` — Detect flaky CI failures on main/next
-
-**Trigger**: CI or E2E Tests workflow completes on `main` or `next`  
-**Safe outputs**: `create-issue` (max 3, grouped, 14-day expiry), `noop`
-
-Analyzes failed CI runs and distinguishes flaky failures (timeouts, connection resets, Playwright instability) from real regressions. Creates `[flake]` issues only for likely flakes, grouped under a parent tracking issue.
-
----
-
-#### `stale-issue-processor.md` — Weekly stale issue warning
-
-**Trigger**: every Monday 09:00 UTC  
-**Safe outputs**: `add-comment` (max 10), `add-labels` (`stale`, max 10)
-
-Finds open issues with `needs-reproduction` or `needs-info` older than 60 days with no recent activity. Adds `stale` label and posts a friendly warning comment with a 14-day close window.
+A fix may trigger both a visual flow **and** Flow 3 if it affects both browser output and terminal/build output.
 
 ---
 
-#### `agent-bug-fix-trigger.md` — Auto-assign Copilot on `agent-fix` label
+### Flow 0 — Universal Verification (Always)
 
-**Trigger**: any label added to an issue
-**Safe outputs**: `assign-to-agent` (copilot), `add-comment` (max 1), `add-labels` (`agent-in-progress`)
+Applies to every fix, regardless of what changed.
 
-When a maintainer adds `agent-fix` to an issue, this validates the issue is actionable and assigns the Copilot coding agent to it. Copilot then follows the skill workflow defined in `CLAUDE.md` and `.claude/skills/fix-bug/SKILL.md`.
+1. Run the full unit test suite and wait for results.
+2. If any tests fail, diagnose and fix before proceeding.
+3. Re-read the original problem description in full.
+4. Trace through the fix: does it address the root cause, or only a symptom?
+5. If the fix is incomplete or misaligned, revise before opening a PR.
 
----
-
-#### `agent-workflow-analyzer.md` — Intelligent flow determination + Copilot assignment
-
-**Trigger**: any label added to an issue (specifically `agent-workflow`)
-**Safe outputs**: `add-comment` (max 1), `add-labels` (flow labels + `agent-ready`, max 2), `assign-to-agent` (copilot)
-
-**Two-stage agentic pipeline**: When a maintainer adds `agent-workflow` to an issue, this workflow analyzes the bug report and determines the appropriate verification flow (0-4) based on file paths, keywords, and affected areas. It then:
-
-1. **Analyzes** the issue content using `contents: read` to verify file paths
-2. **Determines** which verification flow applies:
-   - Flow 0: Quick fix (no runtime testing)
-   - Flow 1: Renderer bug (visual verification)
-   - Flow 2: Builder frontend output (hash comparison)
-   - Flow 3: Builder terminal output (stdout/stderr)
-   - Flow 4: Manager UI (E2E Playwright tests)
-3. **Posts** a structured analysis comment with rationale, affected areas, and specific instructions
-4. **Labels** the issue with the determined flow (e.g., `flow-1-renderer`) + `agent-ready`
-5. **Assigns** Copilot with full context already in place
-
-When Copilot picks up the issue, it reads the analysis comment to understand which verification workflow to follow, creating an intelligent preprocessing layer that guides the executor agent.
+**Exit:** All unit tests pass and the fix demonstrably addresses the stated problem.
 
 ---
 
-#### `pr-pre-review.md` — Structural pre-review on new PRs
+### Flow 1 — Renderer Bug Verification
 
-**Trigger**: any PR opened  
-**Safe outputs**: `add-comment` (max 1)
+**Trigger:** Files modified under `code/renderers/` **and** the issue has a visual impact.
 
-Posts a compact comment summarizing the PR's changed area, template compliance, test coverage signal, and whether expected evidence (screenshots, diffs) is present. Helps human reviewers focus on what matters without blocking or requesting changes.
+1. Identify the affected renderer and create or update a template story that exercises the broken behaviour. The story lives alongside the renderer's existing template stories.
+2. Choose the matching sandbox template (e.g. React → `react-vite/default-ts`, Vue 3 → `vue3-vite/default-ts`, Svelte → `svelte-vite/default-ts`).
+3. Generate a full sandbox: `yarn nx sandbox <template> -c production`
+4. Start the sandbox's Storybook dev server.
+5. Use Browser MCP to open the running Storybook, navigate to the story, and take a screenshot.
+6. If the story renders correctly, attach the screenshot to the PR description as visual evidence.
+7. If the bug persists, diagnose and iterate before opening the PR.
+
+**Exit:** Screenshot attached to PR showing the story rendering correctly in a real sandbox.
 
 ---
 
-### Labels used by these workflows
+### Flow 2 — Builder Bug Verification (Frontend Output)
 
-| Label | Created by |
-|---|---|
-| `bug`, `enhancement`, `documentation`, `question`, `performance`, `maintenance` | issue-triage |
-| `needs-reproduction`, `needs-info`, `good first issue` | issue-triage |
-| `flakiness`, `ci` | ci-flake-detector |
-| `stale` | stale-issue-processor |
-| `agent-fix` | maintainers (manual trigger) |
-| `agent-workflow` | maintainers (manual trigger) |
-| `agent-in-progress` | agent-bug-fix-trigger |
-| `agent-ready` | agent-workflow-analyzer |
-| `flow-0-quick-fix`, `flow-1-renderer`, `flow-2-builder-frontend`, `flow-3-builder-terminal`, `flow-4-manager-ui` | agent-workflow-analyzer |
-| `needs-clarification` | agent-workflow-analyzer |
+**Trigger:** Files modified under `code/builders/` **and** the issue has a visual impact (story rendering, HMR, asset loading).
 
-All labels in the `add-labels` safe-outputs use an explicit `allowed` list and a `blocked: ["~*", "*[bot]"]` glob guard to prevent prompt injection via label names.
+1. Create or update a template story that demonstrates the affected behaviour.
+2. Generate a full sandbox: `yarn nx sandbox react-vite/default-ts -c production` (or the most relevant template).
+3. Start the sandbox's Storybook dev server.
+4. Use Browser MCP to open the running Storybook, navigate to the relevant story, and take a screenshot.
+5. Attach the screenshot to the PR description as visual evidence.
+
+**Exit:** Screenshot attached to PR showing the correct browser output from the fixed builder.
+
+---
+
+### Flow 3 — Builder Bug Verification (Node.js Terminal Output)
+
+**Trigger:** Files modified under `code/builders/` **and** the issue affects the Node.js process (build warnings, CLI output, build stats, error messages).
+
+> Note: This flow can run alongside Flow 2 if the same fix affects both browser output and terminal output.
+
+1. Before the fix, run the terminal output capture script against the relevant builder command to record the current (broken) baseline — if no baseline snapshot exists yet.
+2. Implement the fix.
+3. Run the capture script again to record the new output.
+4. The script diffs the new output against the committed baseline snapshot and prints the diff.
+5. Review the diff:
+   - If it matches the intended fix (e.g. a warning is now gone), update the baseline snapshot and commit it alongside the fix.
+   - If it contains unexpected changes, diagnose and revise the fix.
+6. Include the diff output in the PR description.
+
+**Exit:** Baseline snapshot updated (if output changed intentionally) and diff included in PR description.
+
+---
+
+### Flow 4 — Manager Bug Verification
+
+**Trigger:** Files modified under `code/core/src/manager/` or `code/core/src/builder-manager/` **and** the issue has a visual impact.
+
+1. Write or update an E2E test in `code/e2e-tests/` that covers the affected Manager UI behaviour (e.g. panel toggle, keyboard shortcut, settings dialog).
+2. Build the Storybook UI: `cd code && yarn storybook:ui:build`
+3. Start the Storybook UI dev server: `cd code && yarn storybook:ui`
+4. Use Browser MCP to open the Manager UI and navigate to the affected area.
+5. Take a screenshot showing the correct state of the Manager UI.
+6. Run the E2E test suite to confirm the new or updated test passes.
+7. Attach the screenshot to the PR description as visual evidence.
+
+**Exit:** New/updated E2E test passes and screenshot attached to PR showing the Manager UI in the correct state.
+
+---
+
+### Flow Summary
+
+| Flow | Trigger | Key Actions | PR Evidence |
+|------|---------|-------------|-------------|
+| 0 — Universal | Always | Unit tests + re-read problem | Tests pass |
+| 1 — Renderer | `code/renderers/` changed + visual impact | Template story → sandbox → Browser MCP screenshot | Screenshot of story in sandbox |
+| 2 — Builder (frontend) | `code/builders/` changed + visual impact | Template story → sandbox → Browser MCP screenshot | Screenshot of story in sandbox |
+| 3 — Builder (terminal) | `code/builders/` changed + terminal output impact | Capture script → diff → update snapshot | Diff output in PR description |
+| 4 — Manager | `code/core/src/manager/` or `builder-manager/` changed + visual impact | E2E test → start UI → Browser MCP screenshot | E2E pass + screenshot of Manager UI |
+
+Flows 2 and 3 may both apply to the same fix. Always check the issue to determine whether the impact is visual, terminal, or both.
+
+**important:** For making a PR, follow [Pull request template](.github/PULL_REQUEST_TEMPLATE.md)
