@@ -231,6 +231,237 @@ function getMatchedDependencies(category: ErrorCategory, ctx: ErrorContext): str
   }
 }
 
+export interface ActionableStep {
+  title: string;
+  description: string;
+}
+
+export interface CategoryInfo {
+  description: string;
+  actionableSteps: ActionableStep[];
+  docsLink?: string;
+}
+
+/** For a given category, return actionable steps and documentation link to help resolve the error. */
+export function getCategoryInfo(category: ErrorCategory): CategoryInfo {
+  switch (category) {
+    case ERROR_CATEGORIES.MISSING_PROVIDER:
+      return {
+        description: getCategoryDescription(ERROR_CATEGORIES.MISSING_PROVIDER),
+        actionableSteps: [
+          {
+            title: 'Add a decorator',
+            description:
+              'Wrap your story with the necessary context provider using a decorator in the story file or in .storybook/preview.js.',
+          },
+          {
+            title: 'Check existing decorators',
+            description:
+              'Verify that your existing decorators provide the required context and that the provider is properly configured.',
+          },
+        ],
+        docsLink: 'https://storybook.js.org/docs/writing-stories/decorators',
+      };
+
+    case ERROR_CATEGORIES.MISSING_STATE_PROVIDER:
+      return {
+        description: getCategoryDescription(ERROR_CATEGORIES.MISSING_STATE_PROVIDER),
+        actionableSteps: [
+          {
+            title: 'Add a state management provider decorator',
+            description:
+              'Wrap your story with the required state provider (e.g. Redux Provider, Zustand store) using a decorator.',
+          },
+          {
+            title: 'Configure globally',
+            description:
+              'Add the provider to the decorators array in .storybook/preview.js to apply it to all stories.',
+          },
+        ],
+        docsLink: 'https://storybook.js.org/docs/writing-stories/decorators',
+      };
+
+    case ERROR_CATEGORIES.MISSING_ROUTER_PROVIDER:
+      return {
+        description: getCategoryDescription(ERROR_CATEGORIES.MISSING_ROUTER_PROVIDER),
+        actionableSteps: [
+          {
+            title: 'Add a router decorator',
+            description:
+              'Wrap your story with the necessary router provider (e.g. MemoryRouter for React Router) using a decorator.',
+          },
+          {
+            title: 'Use a framework integration',
+            description:
+              'Consider using a Storybook framework integration that includes router support out of the box.',
+          },
+        ],
+        docsLink: 'https://storybook.js.org/docs/writing-stories/decorators',
+      };
+
+    case ERROR_CATEGORIES.MISSING_THEME_PROVIDER:
+      return {
+        description: getCategoryDescription(ERROR_CATEGORIES.MISSING_THEME_PROVIDER),
+        actionableSteps: [
+          {
+            title: 'Add a theme provider decorator',
+            description:
+              'Wrap your story with the required theme provider (e.g. ThemeProvider from styled-components or Emotion) using a decorator.',
+          },
+          {
+            title: 'Configure globally',
+            description:
+              'Add the theme provider to the decorators array in .storybook/preview.js to apply it to all stories.',
+          },
+        ],
+        docsLink: 'https://storybook.js.org/docs/writing-stories/decorators',
+      };
+
+    case ERROR_CATEGORIES.MISSING_TRANSLATION_PROVIDER:
+      return {
+        description: getCategoryDescription(ERROR_CATEGORIES.MISSING_TRANSLATION_PROVIDER),
+        actionableSteps: [
+          {
+            title: 'Add an i18n provider decorator',
+            description:
+              'Wrap your story with the required internationalization provider using a decorator.',
+          },
+          {
+            title: 'Configure globally',
+            description:
+              'Add the i18n provider to the decorators array in .storybook/preview.js to apply it to all stories.',
+          },
+        ],
+        docsLink: 'https://storybook.js.org/docs/writing-stories/decorators',
+      };
+
+    case ERROR_CATEGORIES.MISSING_PORTAL_ROOT:
+      return {
+        description: getCategoryDescription(ERROR_CATEGORIES.MISSING_PORTAL_ROOT),
+        actionableSteps: [
+          {
+            title: 'Add a portal root element',
+            description:
+              'Ensure a valid DOM element exists for the portal target. Add it via a decorator or .storybook/preview-body.html.',
+          },
+          {
+            title: 'Use a decorator',
+            description:
+              'Create a decorator that adds the portal container element to the DOM before the story renders.',
+          },
+        ],
+        docsLink: 'https://storybook.js.org/docs/writing-stories/decorators',
+      };
+
+    case ERROR_CATEGORIES.HOOK_USAGE_ERROR:
+      return {
+        description: getCategoryDescription(ERROR_CATEGORIES.HOOK_USAGE_ERROR),
+        actionableSteps: [
+          {
+            title: 'Follow the Rules of Hooks',
+            description:
+              'Ensure hooks are only called at the top level of a React function component or custom hook, not inside conditionals, loops, or nested functions.',
+          },
+          {
+            title: 'Wrap in a component',
+            description:
+              'If you need to use hooks in a story, wrap the logic in a component that is rendered by the story function.',
+          },
+        ],
+        docsLink: 'https://react.dev/warnings/invalid-hook-call-warning',
+      };
+
+    case ERROR_CATEGORIES.MODULE_IMPORT_ERROR:
+      return {
+        description: getCategoryDescription(ERROR_CATEGORIES.MODULE_IMPORT_ERROR),
+        actionableSteps: [
+          {
+            title: 'Install the missing module',
+            description:
+              'Run your package manager install command (npm install, yarn, or pnpm install) to ensure all required dependencies are installed.',
+          },
+          {
+            title: 'Check your Storybook configuration',
+            description:
+              'Verify your Storybook builder configuration picks up correct module aliases, paths, and resolve settings.',
+          },
+        ],
+        docsLink: 'https://storybook.js.org/docs/builders/webpack',
+      };
+
+    case ERROR_CATEGORIES.DYNAMIC_MODULE_IMPORT_ERROR:
+      return {
+        description: getCategoryDescription(ERROR_CATEGORIES.DYNAMIC_MODULE_IMPORT_ERROR),
+        actionableSteps: [
+          {
+            title: 'Clear cache and restart',
+            description:
+              'Delete the .storybook cache and restart Storybook to force module re-bundling.',
+          },
+          {
+            title: 'Check Vite configuration',
+            description:
+              'Ensure your Vite configuration properly handles dynamic imports and that the module exists in your project.',
+          },
+        ],
+        docsLink: 'https://storybook.js.org/docs/builders/vite',
+      };
+
+    case ERROR_CATEGORIES.SERVER_COMPONENTS_ERROR:
+      return {
+        description: getCategoryDescription(ERROR_CATEGORIES.SERVER_COMPONENTS_ERROR),
+        actionableSteps: [
+          {
+            title: "Add 'use client' directive",
+            description:
+              "Add 'use client' at the top of your component file to mark it as a Client Component in Next.js.",
+          },
+          {
+            title: 'Mock server components',
+            description:
+              "Use Storybook's module mocking to replace server-only modules with browser-compatible alternatives.",
+          },
+        ],
+        docsLink: 'https://storybook.js.org/docs/get-started/frameworks/nextjs',
+      };
+
+    case ERROR_CATEGORIES.COMPONENT_RENDER_ERROR:
+      return {
+        description: getCategoryDescription(ERROR_CATEGORIES.COMPONENT_RENDER_ERROR),
+        actionableSteps: [
+          {
+            title: 'Check required props',
+            description:
+              'Ensure all required props are provided in your story args and that prop types match what the component expects.',
+          },
+          {
+            title: 'Add default values',
+            description:
+              'Provide default values for optional props that the component may access without null checks.',
+          },
+        ],
+      };
+
+    default:
+      return {
+        description: getCategoryDescription(ERROR_CATEGORIES.UNKNOWN_ERROR),
+        actionableSteps: [
+          {
+            title: 'Check the browser console',
+            description:
+              'Open the browser developer tools and check the console for additional error details.',
+          },
+          {
+            title: 'Check the terminal',
+            description:
+              'Review the terminal output where Storybook is running for compilation or server errors.',
+          },
+        ],
+        docsLink: 'https://storybook.js.org/docs/configure',
+      };
+  }
+}
+
 /** For a given category, return a description of the error for better legibility. */
 export function getCategoryDescription(category: ErrorCategory): string {
   switch (category) {

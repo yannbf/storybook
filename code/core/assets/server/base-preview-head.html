@@ -144,87 +144,160 @@
     border-radius: 6px;
     background: white;
     color: black;
-    border: 1px solid #ff0000;
+    border: 1px solid #ff4400;
     box-shadow: 0 0 64px rgba(0, 0, 0, 0.1);
-    gap: 24px;
-
-    & ol {
-      padding-left: 18px;
-      margin: 0;
-    }
+    gap: 16px;
 
     /* Redefine colors to ensure readability regardless of user-provided * selectors. */
     * {
       background: white;
       color: black;
     }
+  }
 
-    & h1 {
-      font-family: Nunito Sans;
-      font-size: 22px;
-      font-weight: 400;
-      line-height: 30px;
-      font-weight: normal;
-      margin: 0;
+  .sb-errordisplay_header {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
 
-      &::before {
-        content: '';
-        display: inline-block;
-        width: 12px;
-        height: 12px;
-        background: #ff4400;
-        border-radius: 50%;
-        margin-right: 8px;
-      }
+  .sb-errordisplay_badge {
+    display: inline-flex;
+    align-items: center;
+    background: #ff4400 !important;
+    color: white !important;
+    font-family: Nunito Sans, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    margin-top: 5px;
+  }
+
+  .sb-errordisplay_title {
+    font-family: Nunito Sans, sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 26px;
+    margin: 0;
+    word-break: break-word;
+  }
+
+  .sb-errordisplay_context {
+    background: #fff8f6 !important;
+    border: 1px solid #ffd5c8;
+    border-radius: 4px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .sb-errordisplay_context * {
+    background: #fff8f6 !important;
+  }
+
+  .sb-errordisplay_context--unknown {
+    background: #f7f7f7 !important;
+    border-color: #e0e0e0;
+  }
+
+  .sb-errordisplay_context--unknown * {
+    background: #f7f7f7 !important;
+  }
+
+  .sb-errordisplay_description {
+    font-family: Nunito Sans, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 20px;
+    margin: 0;
+  }
+
+  .sb-errordisplay_steps {
+    padding-left: 18px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .sb-errordisplay_steps li {
+    font-family: Nunito Sans, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 18px;
+  }
+
+  .sb-errordisplay_code {
+    padding: 10px;
+    flex: 1;
+    background: #242424 !important;
+    color: #c6c6c6 !important;
+    box-sizing: border-box;
+
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 19px;
+    border-radius: 4px;
+
+    font-family:
+      'Operator Mono', 'Fira Code Retina', 'Fira Code', 'FiraCode-Retina', 'Andale Mono',
+      'Lucida Console', Consolas, Monaco, monospace;
+    margin: 0;
+    overflow: auto;
+    white-space: pre-wrap;
+
+    & code {
+      background-color: inherit !important;
+      color: inherit !important;
     }
+  }
 
-    & p,
-    & ol {
-      font-family: Nunito Sans;
-      font-size: 14px;
-      font-weight: 400;
-      line-height: 19px;
-      margin: 0;
-    }
+  .sb-errordisplay_actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
 
-    & li + li {
-      margin: 0;
-      padding: 0;
-      padding-top: 12px;
-    }
+  .sb-errordisplay_copy-btn {
+    background: white !important;
+    color: #333 !important;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    padding: 6px 14px;
+    font-family: Nunito Sans, sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
 
-    & a {
-      color: currentColor;
-    }
+  .sb-errordisplay_copy-btn:hover {
+    background: #f5f5f5 !important;
+    border-color: #aaa;
+  }
 
-    & .sb-errordisplay_code {
-      padding: 10px;
-      flex: 1;
-      background: #242424;
-      color: #c6c6c6;
-      box-sizing: border-box;
+  .sb-errordisplay_docs-link {
+    font-family: Nunito Sans, sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: #1ea7fd !important;
+    text-decoration: none;
+    background: transparent !important;
+  }
 
-      font-size: 14px;
-      font-weight: 400;
-      line-height: 19px;
-      border-radius: 4px;
+  .sb-errordisplay_docs-link:hover {
+    text-decoration: underline;
+  }
 
-      font-family:
-        'Operator Mono', 'Fira Code Retina', 'Fira Code', 'FiraCode-Retina', 'Andale Mono',
-        'Lucida Console', Consolas, Monaco, monospace;
-      margin: 0;
-      overflow: auto;
-
-      & code {
-        background-color: inherit;
-        color: inherit;
-      }
-    }
-
-    & .sb-errordisplay pre {
-      white-space: pre-wrap;
-      white-space: revert;
-    }
+  .sb-errordisplay_docs-link[hidden] {
+    display: none;
   }
 
   @-webkit-keyframes sb-rotate360 {

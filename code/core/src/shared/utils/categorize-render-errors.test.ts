@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ERROR_CATEGORIES, categorizeError } from './categorize-render-errors';
+import { ERROR_CATEGORIES, categorizeError, getCategoryInfo } from './categorize-render-errors';
 
 describe('categorize-render-errors', () => {
   beforeEach(() => {
@@ -271,6 +271,61 @@ describe('categorize-render-errors', () => {
 
         expect(result.matchedDependencies).toEqual(['styled-components', '@emotion/react']);
       });
+    });
+  });
+
+  describe('getCategoryInfo', () => {
+    it('should return actionable steps for each known category', () => {
+      const knownCategories = [
+        ERROR_CATEGORIES.MISSING_PROVIDER,
+        ERROR_CATEGORIES.MISSING_STATE_PROVIDER,
+        ERROR_CATEGORIES.MISSING_ROUTER_PROVIDER,
+        ERROR_CATEGORIES.MISSING_THEME_PROVIDER,
+        ERROR_CATEGORIES.MISSING_TRANSLATION_PROVIDER,
+        ERROR_CATEGORIES.MISSING_PORTAL_ROOT,
+        ERROR_CATEGORIES.HOOK_USAGE_ERROR,
+        ERROR_CATEGORIES.MODULE_IMPORT_ERROR,
+        ERROR_CATEGORIES.DYNAMIC_MODULE_IMPORT_ERROR,
+        ERROR_CATEGORIES.SERVER_COMPONENTS_ERROR,
+        ERROR_CATEGORIES.COMPONENT_RENDER_ERROR,
+      ];
+
+      for (const category of knownCategories) {
+        const info = getCategoryInfo(category);
+        expect(info.actionableSteps.length).toBeGreaterThan(0);
+        expect(info.description).toBeTruthy();
+        for (const step of info.actionableSteps) {
+          expect(step.title).toBeTruthy();
+          expect(step.description).toBeTruthy();
+        }
+      }
+    });
+
+    it('should return a docsLink for provider-related errors', () => {
+      const providerCategories = [
+        ERROR_CATEGORIES.MISSING_PROVIDER,
+        ERROR_CATEGORIES.MISSING_STATE_PROVIDER,
+        ERROR_CATEGORIES.MISSING_ROUTER_PROVIDER,
+        ERROR_CATEGORIES.MISSING_THEME_PROVIDER,
+        ERROR_CATEGORIES.MISSING_TRANSLATION_PROVIDER,
+      ];
+
+      for (const category of providerCategories) {
+        const info = getCategoryInfo(category);
+        expect(info.docsLink).toContain('decorators');
+      }
+    });
+
+    it('should return actionable steps for UNKNOWN_ERROR', () => {
+      const info = getCategoryInfo(ERROR_CATEGORIES.UNKNOWN_ERROR);
+      expect(info.actionableSteps.length).toBeGreaterThan(0);
+    });
+
+    it('should return a description for every category', () => {
+      for (const category of Object.values(ERROR_CATEGORIES)) {
+        const info = getCategoryInfo(category);
+        expect(info.description).toBeTruthy();
+      }
     });
   });
 });

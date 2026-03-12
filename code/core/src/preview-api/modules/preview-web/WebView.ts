@@ -7,6 +7,11 @@ import AnsiToHtml from 'ansi-to-html';
 import { parse } from 'picoquery';
 import { dedent } from 'ts-dedent';
 
+import {
+  ERROR_CATEGORIES,
+  categorizeError,
+  getCategoryInfo,
+} from '../../../shared/utils/categorize-render-errors';
 import type { View } from './View';
 
 const { document } = global;
@@ -38,6 +43,52 @@ type Layout = keyof typeof layoutClassMap | 'none';
 const ansiConverter = new AnsiToHtml({
   escapeXML: true,
 });
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function formatErrorStack(message: string, stack: string): string {
+  if (!stack && !message) {
+    return '';
+  }
+  if (!stack) {
+    return message;
+  }
+  // If the message is multiline, it's already embedded in the stack display
+  const isMultiline = message.includes('\n');
+  if (isMultiline) {
+    return stack || message;
+  }
+  return `${message}\n\n${stack}`;
+}
+
+function copyErrorToClipboard(btn: HTMLElement, errorText: string) {
+  const originalText = btn.textContent || 'Copy error';
+  const resetText = () => {
+    btn.textContent = originalText;
+  };
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(errorText).then(() => {
+      btn.textContent = 'Copied!';
+      setTimeout(resetText, 2000);
+    });
+  } else {
+    const textarea = document.createElement('textarea');
+    textarea.value = errorText;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    btn.textContent = 'Copied!';
+    setTimeout(resetText, 2000);
+  }
+}
 
 export class WebView implements View<HTMLElement> {
   private currentLayoutClass?: (typeof layoutClassMap)[keyof typeof layoutClassMap] | null;
@@ -136,15 +187,72 @@ export class WebView implements View<HTMLElement> {
 
   showErrorDisplay({ message = '', stack = '' }) {
     let header = message;
-    let detail = stack;
     const parts = message.split('\n');
     if (parts.length > 1) {
       [header] = parts;
-      detail = parts.slice(1).join('\n').replace(/^\n/, '');
     }
 
     document.getElementById('error-message')!.innerHTML = ansiConverter.toHtml(header);
-    document.getElementById('error-stack')!.innerHTML = ansiConverter.toHtml(detail);
+    document.getElementById('error-stack')!.innerHTML = ansiConverter.toHtml(
+      formatErrorStack(message, stack)
+    );
+
+    // Categorize the error and populate actionable information
+    const { category, matchedDependencies } = categorizeError(message, stack);
+    const categoryInfo = getCategoryInfo(category);
+    const isUnknown = category === ERROR_CATEGORIES.UNKNOWN_ERROR;
+
+    // Populate category description
+    const descriptionEl = document.getElementById('error-category-description');
+    if (descriptionEl) {
+      const deps =
+        matchedDependencies.length > 0 ? ` (detected: ${matchedDependencies.join(', ')})` : '';
+      descriptionEl.textContent = `${categoryInfo.description}${deps}.`;
+    }
+
+    // Populate actionable steps
+    const stepsContainer = document.getElementById('error-actionable-steps');
+    if (stepsContainer) {
+      stepsContainer.innerHTML = categoryInfo.actionableSteps
+        .map(
+          (step) =>
+            `<li><strong>${escapeHtml(step.title)}</strong>: ${escapeHtml(step.description)}</li>`
+        )
+        .join('');
+    }
+
+    // Show/hide the context section
+    const contextEl = document.getElementById('error-context');
+    if (contextEl) {
+      if (isUnknown) {
+        contextEl.classList.add('sb-errordisplay_context--unknown');
+      } else {
+        contextEl.classList.remove('sb-errordisplay_context--unknown');
+      }
+    }
+
+    // Update docs link
+    const docsLinkEl = document.getElementById('error-docs-link') as HTMLAnchorElement | null;
+    if (docsLinkEl) {
+      if (categoryInfo.docsLink) {
+        docsLinkEl.href = categoryInfo.docsLink;
+        docsLinkEl.removeAttribute('hidden');
+      } else {
+        docsLinkEl.setAttribute('hidden', 'true');
+      }
+    }
+
+    // Attach copy button handler
+    const copyBtn = document.getElementById('error-copy-btn');
+    if (copyBtn) {
+      const errorText = [message, stack].filter(Boolean).join('\n\n');
+      // Clone to remove any previously attached listener
+      const newCopyBtn = copyBtn.cloneNode(true) as HTMLElement;
+      copyBtn.replaceWith(newCopyBtn);
+      newCopyBtn.addEventListener('click', () => {
+        copyErrorToClipboard(newCopyBtn, errorText);
+      });
+    }
 
     this.showMode(Mode.ERROR);
   }
