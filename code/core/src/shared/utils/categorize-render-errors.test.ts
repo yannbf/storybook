@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ERROR_CATEGORIES, categorizeError } from './categorize-render-errors';
+import { ERROR_CATEGORIES, categorizeError, getCategoryGuidance } from './categorize-render-errors';
 
 describe('categorize-render-errors', () => {
   beforeEach(() => {
@@ -271,6 +271,59 @@ describe('categorize-render-errors', () => {
 
         expect(result.matchedDependencies).toEqual(['styled-components', '@emotion/react']);
       });
+    });
+  });
+
+  describe('getCategoryGuidance', () => {
+    it('should return guidance with steps and docs URL for provider errors', () => {
+      const guidance = getCategoryGuidance(ERROR_CATEGORIES.MISSING_PROVIDER);
+
+      expect(guidance.description).toContain('React context');
+      expect(guidance.steps.length).toBeGreaterThan(0);
+      expect(guidance.docsUrl).toBe('https://storybook.js.org/docs/writing-stories/decorators');
+    });
+
+    it('should include matched dependencies in description', () => {
+      const guidance = getCategoryGuidance(ERROR_CATEGORIES.MISSING_STATE_PROVIDER, [
+        'redux',
+        'zustand',
+      ]);
+
+      expect(guidance.description).toContain('redux');
+      expect(guidance.description).toContain('zustand');
+    });
+
+    it('should return guidance without docs URL for unknown errors', () => {
+      const guidance = getCategoryGuidance(ERROR_CATEGORIES.UNKNOWN_ERROR);
+
+      expect(guidance.description).toBeTruthy();
+      expect(guidance.steps.length).toBeGreaterThan(0);
+      expect(guidance.docsUrl).toBeNull();
+    });
+
+    it('should return guidance for module import errors', () => {
+      const guidance = getCategoryGuidance(ERROR_CATEGORIES.MODULE_IMPORT_ERROR);
+
+      expect(guidance.description).toContain('dependency');
+      expect(guidance.steps.length).toBeGreaterThan(0);
+      expect(guidance.docsUrl).toBeTruthy();
+    });
+
+    it('should return guidance for hook usage errors', () => {
+      const guidance = getCategoryGuidance(ERROR_CATEGORIES.HOOK_USAGE_ERROR);
+
+      expect(guidance.description).toContain('hook');
+      expect(guidance.steps.length).toBeGreaterThan(0);
+      expect(guidance.docsUrl).toBeNull();
+    });
+
+    it('should return guidance for every known category', () => {
+      for (const category of Object.values(ERROR_CATEGORIES)) {
+        const guidance = getCategoryGuidance(category);
+
+        expect(guidance.description).toBeTruthy();
+        expect(guidance.steps.length).toBeGreaterThan(0);
+      }
     });
   });
 });
