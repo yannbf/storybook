@@ -178,13 +178,22 @@ export class WebView implements View<HTMLElement> {
     if (copyBtn) {
       const errorText = `${message}\n\n${stack}`.trim();
       copyBtn.onclick = () => {
-        navigator.clipboard.writeText(errorText).then(() => {
-          const original = copyBtn.textContent;
-          copyBtn.textContent = 'Copied!';
-          setTimeout(() => {
-            copyBtn.textContent = original;
-          }, 2000);
-        });
+        navigator.clipboard.writeText(errorText).then(
+          () => {
+            const original = copyBtn.textContent;
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => {
+              copyBtn.textContent = original;
+            }, 2000);
+          },
+          () => {
+            const original = copyBtn.textContent;
+            copyBtn.textContent = 'Failed to copy';
+            setTimeout(() => {
+              copyBtn.textContent = original;
+            }, 2000);
+          }
+        );
       };
     }
 
