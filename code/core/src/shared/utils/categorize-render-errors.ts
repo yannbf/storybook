@@ -274,3 +274,117 @@ export function getCategoryDescription(category: ErrorCategory): string {
       return 'Error could not be categorized';
   }
 }
+
+export interface ErrorGuidance {
+  description: string;
+  steps: string[];
+  docsUrl: string | null;
+}
+
+/** For a given category, return actionable guidance including resolution steps and doc links. */
+export function getCategoryGuidance(
+  category: ErrorCategory,
+  matchedDependencies: string[] = []
+): ErrorGuidance {
+  const description = getCategoryDescription(category);
+  const depHint =
+    matchedDependencies.length > 0 ? ` (detected: ${matchedDependencies.join(', ')})` : '';
+
+  switch (category) {
+    case ERROR_CATEGORIES.MISSING_STATE_PROVIDER:
+    case ERROR_CATEGORIES.MISSING_ROUTER_PROVIDER:
+    case ERROR_CATEGORIES.MISSING_THEME_PROVIDER:
+    case ERROR_CATEGORIES.MISSING_TRANSLATION_PROVIDER:
+    case ERROR_CATEGORIES.MISSING_PROVIDER:
+      return {
+        description: description + depHint,
+        steps: [
+          'Wrap your component or story with the required provider using a decorator.',
+          'You can apply decorators at the story, component, or project level in your Storybook configuration.',
+        ],
+        docsUrl: 'https://storybook.js.org/docs/writing-stories/decorators',
+      };
+
+    case ERROR_CATEGORIES.MISSING_PORTAL_ROOT:
+      return {
+        description,
+        steps: [
+          'Ensure the portal target DOM element exists before the component renders.',
+          'Use a decorator to add the portal container element to the DOM.',
+        ],
+        docsUrl: 'https://storybook.js.org/docs/writing-stories/decorators',
+      };
+
+    case ERROR_CATEGORIES.HOOK_USAGE_ERROR:
+      return {
+        description,
+        steps: [
+          'Ensure hooks are only called inside React function components or custom hooks.',
+          'Check that you are not calling hooks conditionally or inside loops.',
+          'If you have multiple copies of React, ensure only one version is loaded.',
+        ],
+        docsUrl: null,
+      };
+
+    case ERROR_CATEGORIES.MODULE_IMPORT_ERROR:
+      return {
+        description: description + depHint,
+        steps: [
+          'Verify the module is installed by checking your package.json and running your package manager install command.',
+          'Check that your bundler (Webpack or Vite) is configured to resolve the module correctly.',
+        ],
+        docsUrl: 'https://storybook.js.org/docs/builders/vite',
+      };
+
+    case ERROR_CATEGORIES.TEST_FILE_IMPORT_ERROR:
+      return {
+        description,
+        steps: [
+          'Ensure the test file path is correct and the file exists.',
+          'Verify that all dependencies required by the test setup are installed.',
+        ],
+        docsUrl: null,
+      };
+
+    case ERROR_CATEGORIES.DYNAMIC_MODULE_IMPORT_ERROR:
+      return {
+        description,
+        steps: [
+          'Check that the module URL is correct and accessible.',
+          'Try clearing your browser cache and Storybook cache, then restart.',
+        ],
+        docsUrl: null,
+      };
+
+    case ERROR_CATEGORIES.COMPONENT_RENDER_ERROR:
+      return {
+        description,
+        steps: [
+          'Check the error message and stack trace below to identify the failing code.',
+          'Ensure all required props are being passed to the component.',
+          'If the component depends on context or providers, add them using decorators.',
+        ],
+        docsUrl: 'https://storybook.js.org/docs/writing-stories/decorators',
+      };
+
+    case ERROR_CATEGORIES.SERVER_COMPONENTS_ERROR:
+      return {
+        description,
+        steps: [
+          'Server components cannot be rendered directly in Storybook. Create a client wrapper or mock server-only APIs.',
+          'Ensure you are not importing server-only modules into client components.',
+        ],
+        docsUrl: null,
+      };
+
+    default:
+      return {
+        description: 'An unexpected error occurred while rendering the story.',
+        steps: [
+          'Check the error message and stack trace below for more details.',
+          'Verify your Storybook configuration and story code.',
+        ],
+        docsUrl: null,
+      };
+  }
+}

@@ -7,6 +7,10 @@ import AnsiToHtml from 'ansi-to-html';
 import { parse } from 'picoquery';
 import { dedent } from 'ts-dedent';
 
+import {
+  categorizeError,
+  getCategoryGuidance,
+} from '../../../shared/utils/categorize-render-errors';
 import type { View } from './View';
 
 const { document } = global;
@@ -145,6 +149,53 @@ export class WebView implements View<HTMLElement> {
 
     document.getElementById('error-message')!.innerHTML = ansiConverter.toHtml(header);
     document.getElementById('error-stack')!.innerHTML = ansiConverter.toHtml(detail);
+
+    // Use error categorization to show contextual guidance
+    const { category, matchedDependencies } = categorizeError(message, stack);
+    const guidance = getCategoryGuidance(category, matchedDependencies);
+
+    const descriptionEl = document.getElementById('error-description');
+    if (descriptionEl) {
+      descriptionEl.textContent = guidance.description;
+    }
+
+    const guidanceEl = document.getElementById('error-guidance');
+    if (guidanceEl) {
+      guidanceEl.innerHTML = guidance.steps.map((step) => `<li>${step}</li>`).join('');
+    }
+
+    const docsLink = document.getElementById('error-docs-link') as HTMLAnchorElement | null;
+    if (docsLink) {
+      if (guidance.docsUrl) {
+        docsLink.href = guidance.docsUrl;
+        docsLink.removeAttribute('hidden');
+      } else {
+        docsLink.setAttribute('hidden', 'true');
+      }
+    }
+
+    const copyBtn = document.getElementById('error-copy-btn');
+    if (copyBtn) {
+      const errorText = `${message}\n\n${stack}`.trim();
+      copyBtn.onclick = () => {
+        navigator.clipboard.writeText(errorText).then(
+          () => {
+            const original = copyBtn.textContent;
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => {
+              copyBtn.textContent = original;
+            }, 2000);
+          },
+          () => {
+            const original = copyBtn.textContent;
+            copyBtn.textContent = 'Failed to copy';
+            setTimeout(() => {
+              copyBtn.textContent = original;
+            }, 2000);
+          }
+        );
+      };
+    }
 
     this.showMode(Mode.ERROR);
   }

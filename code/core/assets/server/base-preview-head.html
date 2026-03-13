@@ -225,6 +225,52 @@
       white-space: pre-wrap;
       white-space: revert;
     }
+
+    & .sb-errordisplay_actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      background: white;
+
+      & a,
+      & button {
+        font-family:
+          Nunito Sans,
+          sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 18px;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      & a {
+        background: #f6f9fc;
+        color: #029cfd;
+        border: 1px solid #029cfd;
+
+        &[hidden] {
+          display: none;
+        }
+      }
+
+      & button {
+        background: #f6f9fc;
+        color: #333;
+        border: 1px solid #d9d9d9;
+      }
+
+      & button:hover,
+      & a:hover {
+        background: #e8f4fd;
+      }
+    }
   }
 
   @-webkit-keyframes sb-rotate360 {
